@@ -1,0 +1,1 @@
+Having good settings will prevent errors my guy
