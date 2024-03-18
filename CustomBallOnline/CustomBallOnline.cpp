@@ -25,8 +25,8 @@ void CustomBallOnline::onLoad()
 	
 	// delay cvars
 	cvarManager->registerCvar("startNavDelay", "1.2", "start delay", true, true, 0, true, 100);
-	cvarManager->registerCvar("autoNavDelay", "5.0", "navigation delay", true, true, 1, true, 500);
-	cvarManager->registerCvar("delayDuration", "0.5", "duration of a delay step", true, true, 0, true, 10);
+	cvarManager->registerCvar("autoNavDelay", "6.0", "navigation delay", true, true, 1, true, 500);
+	cvarManager->registerCvar("delayDuration", "0.7", "duration of a delay step", true, true, 0, true, 10);
 
 	// bool cvars
 	cvarManager->registerCvar("autoNavActive", "0", "flag for checking if automatic menu navigation is active", true, true, 0, true, 1);
@@ -50,9 +50,17 @@ void CustomBallOnline::onLoad()
 		bool runOnMatchStart = cvarManager->getCvar("runOnMatchStart").getBoolValue();
 
 		if (runOnMatchStart) {
+			bool inOnlineGame = gameWrapper->IsInOnlineGame();
 			bool inFreeplay = gameWrapper->IsInFreeplay();
-			if (!inFreeplay) {
-				cvarManager->executeCommand("enableBallTexture");
+			bool inReplay = gameWrapper->IsInReplay();
+
+			if (inOnlineGame && !(inFreeplay || inReplay)) {
+
+				// wait .5 seconds before starting... to give extra time to make sure shit is loaded ig
+				gameWrapper->SetTimeout([this](...){
+					cvarManager->executeCommand("enableBallTexture");
+					}, .5);
+
 			}
 		}
 	});
