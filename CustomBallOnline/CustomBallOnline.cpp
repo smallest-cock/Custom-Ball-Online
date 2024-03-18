@@ -56,7 +56,7 @@ void CustomBallOnline::onLoad()
 
 			if (inOnlineGame && !(inFreeplay || inReplay)) {
 
-				// wait .5 seconds before starting... to give extra time to make sure shit is loaded ig
+				// wait .5 seconds before starting... to allow more shit to load ig
 				gameWrapper->SetTimeout([this](...){
 					cvarManager->executeCommand("enableBallTexture");
 					}, .5);
