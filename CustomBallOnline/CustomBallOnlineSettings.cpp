@@ -16,6 +16,7 @@ void CustomBallOnline::RenderSettings() {
 
     // bools
     CVarWrapper runOnMatchStartCvar = cvarManager->getCvar("runOnMatchStart");
+    CVarWrapper enableFastModeCvar = cvarManager->getCvar("enableFastMode");
 
 
 
@@ -59,6 +60,20 @@ void CustomBallOnline::RenderSettings() {
     ImGui::Spacing();
     ImGui::Spacing();
 
+
+    // enable fast mode
+    bool enableFastMode = enableFastModeCvar.getBoolValue();
+    if (ImGui::Checkbox("Attempt fast navigation when possible", &enableFastMode)) {
+        enableFastModeCvar.setValue(enableFastMode);
+        if (!enableFastMode) {
+			clearWidgetIDs();
+        }
+    }
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
     ImGui::Separator();
 
     ImGui::Spacing();
@@ -70,10 +85,10 @@ void CustomBallOnline::RenderSettings() {
 
     // navigation steps
     std::string beforeSteps = navigationStepsCvar.getStringValue();
-    ImGui::InputTextWithHint("menu navigation steps", "start down down enter ...", &beforeSteps);
+    ImGui::InputTextWithHint("menu navigation steps", "navigation words: enter, back, up, down, left, right, delay, exit", &beforeSteps);
     navigationStepsCvar.setValue(beforeSteps);
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("navigation words: up, down, left, right, enter, back, start, exit, delay");
+        ImGui::SetTooltip("starts after the 'Disable Safe Mode' button is highlighted");
     }
 
     ImGui::Spacing();
@@ -95,8 +110,8 @@ void CustomBallOnline::RenderSettings() {
     ImGui::Spacing();
 
     // navigation step delay
-    float delay = navDelayCvar.getFloatValue();
-    ImGui::SliderFloat("navigation delay (lower is faster)", &delay, 2.0f, 50.0f, "%.0f frames");      // maybe make slider logarithmic
+    int delay = navDelayCvar.getIntValue();
+    ImGui::SliderInt("navigation delay (lower is faster)", &delay, 2, 100, "%.0f frames");      // maybe make slider logarithmic .... dont think ImGuiSliderFlags_Logarithmic exists in v1.75 :(
     navDelayCvar.setValue(delay);
     if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("menu navigation speed depends on your game fps (higher fps = faster navigation) ... super low delay may cause errors");
@@ -109,6 +124,9 @@ void CustomBallOnline::RenderSettings() {
     float delayDuration = delayDurationCvar.getFloatValue();
     ImGui::SliderFloat("duration of a \"delay\" step", &delayDuration, 0.0f, 5.0f, "%.1f seconds");
     delayDurationCvar.setValue(delayDuration);
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("gives AlphaConsole time to load all its modules");
+    }
     
     ImGui::Spacing();
     ImGui::Spacing();
@@ -129,4 +147,16 @@ void CustomBallOnline::RenderSettings() {
     std::string exitCommand = exitCommandCvar.getStringValue();
     ImGui::InputTextWithHint("exit command", "exit command", &exitCommand);
     exitCommandCvar.setValue(exitCommand);
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+
+    if (ImGui::Button("clear saved IDs")) {
+        clearWidgetIDs();
+    }
 }

@@ -23,18 +23,24 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	//Boilerplate
 	void onLoad() override;
 
-	// BallTexture stuff
+	// Auto nav stuff
 	void enableBallTexture();
 	void frameRenderCallback();
 	void startNav();
+	void startSequence();
+	void activateBasedOnID(ImGuiID id);
 	void everyGameTick();
+	void clearWidgetIDs();
 	void resetNavVariables();
 	void navInput(std::string);
 	static int frameCounter;
 	static int stepCounter;
 	static int delayCounter;
 	static int delayStepAmount;
+	static int activatedWidgetCount;
 	static bool delay;
+	static bool idsAreStored;
+	static std::vector<ImGuiID> widgetIDs;
 	static std::vector<std::string> navigationSteps;
 
 public:

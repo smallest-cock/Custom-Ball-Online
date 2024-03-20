@@ -3,11 +3,30 @@
 
 
 std::vector<std::string> CustomBallOnline::navigationSteps;
+std::vector<ImGuiID> CustomBallOnline::widgetIDs;
 int CustomBallOnline::frameCounter = 0;
 int CustomBallOnline::stepCounter = 0;
 bool CustomBallOnline::delay = false;
+bool CustomBallOnline::idsAreStored = false;
 int CustomBallOnline::delayCounter = 0;
 int CustomBallOnline::delayStepAmount = 0;
+int CustomBallOnline::activatedWidgetCount = 0;
+
+
+
+// TODO: maybe eventually make a function to find the ID of a widget based on its label text or fixed position in the menu
+
+
+// TODO: find out why tf widget IDs change (but not the last one?) every 2 games or whatever the fuck
+//		 is it a memory address thing?
+//		 is it a timeout thing?
+//		 does it happen on a RL specific event/function?
+//		 is there a way to prevent it? perhaps using ImGui::KeepAliveID() ?
+//		 if not way to prevent it, is there a way to track it? maybe based on event/function hook?
+
+
+// TODO: make start sequence nav steps editable, with dedicated text input in settings like regular nav steps
+
 
 
 std::vector<std::string> parseWords(const std::string& input) {
@@ -19,13 +38,6 @@ std::vector<std::string> parseWords(const std::string& input) {
 	}
 	return words;
 }
-
-
-
-	// TODO: find convenient fix for when auto nav fucks up causing alphaconsole menu widgets to be misaligned
-	//		 perhaps see if there's a way to activate imgui widgets by name/id/etc instead of using blind "up up up down" nav steps
-	//		 which are very error prone (one fucked run can fuck up subsequent runs)
-
 
 
 void CustomBallOnline::enableBallTexture() {
@@ -82,6 +94,53 @@ void CustomBallOnline::everyGameTick() {
 	else {
 		gameWrapper->UnhookEvent("Function Engine.GameViewportClient.Tick");
 		LOG("unhooked from game tick event...");
+
+		// test
+		for (int i = 0; i < widgetIDs.size(); i++) {
+			LOG("widget id {}: {}", i + 1, widgetIDs[i]);
+		}
+
+		// determine if fast mode is possible
+		if (widgetIDs.size() == 4) {
+			idsAreStored = true;
+		}
+	}
+}
+
+
+// should make it so navigation steps start from the same position every time (no variance)
+// should leave off with DSM button highlighted/focused (but not clicked) every time
+void CustomBallOnline::startSequence() {
+
+	if (stepCounter == 0) {
+		ImGui::SetWindowFocus("AlphaConsole Plugin");
+		navInput("down");
+	}
+	if (stepCounter == 1) {
+		navInput("enter");
+	}
+	else if (stepCounter == 2) {
+		navInput("up");
+	}
+	else if (stepCounter == 3 || stepCounter == 4) {
+		navInput("down");
+	}
+
+	// DSM should be highlighted/focused at this point (but not pressed)
+	else if (stepCounter == 5) {
+		LOG("~~~ 'Disable Safe Mode' button should be highlighted rn... if it's not, startSequence() needs fixing ~~~");
+
+		ImGuiID currentHighlightedID = ImGui::GetFocusID();
+
+		if ((unsigned long)currentHighlightedID > 0) {
+			if (idsAreStored) {
+				// check if the current highlighted ID is the same as the 1st ID in the stored list (stored DSM ID)
+				if (!(currentHighlightedID == widgetIDs[0])) {
+					LOG("~~ stored DSM ID ({}) is invalid.. the valid ID is now {} ~~", widgetIDs[0], currentHighlightedID);
+					clearWidgetIDs();
+				}
+			}
+		}
 	}
 }
 
@@ -92,34 +151,75 @@ void CustomBallOnline::frameRenderCallback() {
 
 	// on every x amount of frames
 	int navDelay = cvarManager->getCvar("autoNavDelay").getIntValue();
-
 	if (frameCounter % navDelay == 0) {
 
 		if (!delay) {
-			// if there are more nav steps
-			if (stepCounter < navigationSteps.size()) {
-				std::string currentStep = navigationSteps[stepCounter];
 
+			 startSequence();
 
-				if (currentStep != "delay") {
-					gameWrapper->Execute([currentStep, this](GameWrapper* gw) {
-						navInput(currentStep);
-						});
+			// after start sequence
+			if (stepCounter >= 5) {
+
+				// if a fastmode run
+				bool fastModeEnabled = cvarManager->getCvar("enableFastMode").getBoolValue();
+				if (fastModeEnabled && idsAreStored) {
+					int widgetIndex = stepCounter - 5;
+
+					// check if index is in range
+					if (widgetIndex < widgetIDs.size() + 1) {
+						ImGuiID currentSavedID = widgetIDs[widgetIndex];
+					
+						// dsm
+						if (widgetIndex == 0) {
+							activateBasedOnID(currentSavedID);
+							delay = true;
+						}
+						// others
+						else {
+							activateBasedOnID(currentSavedID);
+						}
+					}
+					// else... there must be no more steps/IDs
+					else {
+						LOG("... no more IDs to activate");
+						gameWrapper->Execute([this](GameWrapper* gw) {
+							cvarManager->getCvar("autoNavActive").setValue(false);
+							cvarManager->executeCommand("sleep 200; navInput exit");
+							LOG("........ was a fast mode run");
+							});
+						return;
+					}
 				}
+
+				// if a regular run
 				else {
-					delay = true;
+					int navStepIndex = stepCounter - 5;
+
+					// if there are more nav steps
+					if (navStepIndex < navigationSteps.size()) {
+						std::string currentStep = navigationSteps[navStepIndex];
+
+						if (currentStep != "delay") {
+							//gameWrapper->Execute([currentStep, this](GameWrapper* gw) {
+							//	navInput(currentStep);
+							//	});
+							navInput(currentStep);
+						}
+						else {
+							delay = true;
+						}
+					}
+					// if nav steps are finished
+					else {
+						LOG("... no more nav steps");
+						gameWrapper->Execute([this](GameWrapper* gw) {
+							cvarManager->getCvar("autoNavActive").setValue(false);
+							});
+						return;
+					}
 				}
-				
-				stepCounter++;
 			}
-			// if nav steps are finished
-			else {
-				LOG("... no more nav steps");
-				gameWrapper->Execute([this](GameWrapper* gw) {
-					cvarManager->getCvar("autoNavActive").setValue(false);
-					});
-				return;
-			}
+			stepCounter++;
 		}
 		else {
 			delayCounter++;
@@ -157,14 +257,19 @@ void CustomBallOnline::navInput(std::string keyName) {
 		io.NavInputs[ImGuiNavInput_DpadRight] = 1.0f;
 	}
 	else if (keyName == "enter") {
+		ImGuiID currentHighlightedID = ImGui::GetFocusID();
+		ImGui::KeepAliveID(currentHighlightedID);
+
+		if (((unsigned long)currentHighlightedID > 0) && stepCounter > 4) {
+				if (widgetIDs.size() < 4) {
+					widgetIDs.push_back(currentHighlightedID);
+				}
+		}
 		io.NavInputs[ImGuiNavInput_Activate] = 1.0f;
+		ImGui::KeepAliveID(currentHighlightedID);
 	}
 	else if (keyName == "back") {
 		io.NavInputs[ImGuiNavInput_Cancel] = 1.0f;
-	}
-	else if (keyName == "start") {
-		ImGui::SetWindowFocus("AlphaConsole Plugin");
-		io.NavInputs[ImGuiNavInput_DpadDown] = 1.0f;
 	}
 	else if (keyName == "exit") {
 		gameWrapper->Execute([this](GameWrapper* gw) {
@@ -173,7 +278,23 @@ void CustomBallOnline::navInput(std::string keyName) {
 			});
 	}
 
+	//findWidgetID("test");
 	LOG("[nav step {}] simulated *** {} ***", stepCounter, keyName);
+}
+
+
+void CustomBallOnline::clearWidgetIDs() {
+	widgetIDs.clear();
+	idsAreStored = false;
+	LOG("~~~ cleared stored item IDs ~~~");
+}
+
+
+void CustomBallOnline::activateBasedOnID(ImGuiID id) {
+	ImGui::KeepAliveID(id);
+	ImGui::ActivateItem(id);
+	ImGui::KeepAliveID(id);			// putting in work (i think)
+	LOG("~~ attempted activation on ID {} ~~", id);
 }
 
 
