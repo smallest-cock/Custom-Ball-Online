@@ -6,6 +6,9 @@ BAKKESMOD_PLUGIN(CustomBallOnline, "Custom Ball Online", plugin_version, PLUGINT
 
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 
+// the playlist IDs which should use the default RL soccar ball ... from this list https://wiki.bakkesplugins.com/code_snippets/playlist_id/
+std::vector<int> CustomBallOnline::acceptablePlaylistIDs = { 1, 2, 3, 4, 6, 10, 11, 13, 16, 18, 19, 22, 28, 34, 41, 50, 52 };
+
 void CustomBallOnline::onLoad()
 {
 	_globalCvarManager = cvarManager;
@@ -89,11 +92,31 @@ void CustomBallOnline::onLoad()
 
 			if (!(inFreeplay || inReplay)) {
 
-				// wait 1 second after all teams created... to perhaps give some extra time for things to load before starting?
-				gameWrapper->SetTimeout([this](...) {
-					cvarManager->executeCommand("enableBallTexture");
-					}, 1); 
+				ServerWrapper onlineServer = gameWrapper->GetOnlineGame();
 
+				if (!onlineServer) {
+					LOG("server is null -_-");
+					return;
+				}
+
+				std::string matchType = onlineServer.GetMatchTypeName();
+				GameSettingPlaylistWrapper playlist = onlineServer.GetPlaylist();
+
+				if (!playlist) { return; }
+
+				std::string playlistName = playlist.GetName();
+				int playlistID = playlist.GetPlaylistId();
+				LOG("++ playlistName: {}", playlistName);
+				LOG("++ playlistID: {}", playlistID);
+
+				// check if current playlist ID is found in acceptablePlaylistIDs
+				if (std::find(acceptablePlaylistIDs.begin(), acceptablePlaylistIDs.end(), playlistID) != acceptablePlaylistIDs.end()) {
+
+					// wait 1 second after all teams created... to perhaps give some extra time for things to load before starting?
+					gameWrapper->SetTimeout([this](...) {
+						cvarManager->executeCommand("enableBallTexture");
+						}, 1);
+				}
 			}
 		}
 	});

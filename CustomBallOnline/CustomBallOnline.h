@@ -42,6 +42,7 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	static bool idsAreStored;
 	static std::vector<ImGuiID> widgetIDs;
 	static std::vector<std::string> navigationSteps;
+	static std::vector<int> acceptablePlaylistIDs;
 
 public:
 	void RenderSettings() override;

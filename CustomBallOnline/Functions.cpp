@@ -13,7 +13,6 @@ int CustomBallOnline::delayStepAmount = 0;
 int CustomBallOnline::activatedWidgetCount = 0;
 
 
-
 // TODO: maybe eventually make a function to find the ID of a widget based on its label text or fixed position in the menu
 
 
@@ -26,6 +25,10 @@ int CustomBallOnline::activatedWidgetCount = 0;
 
 
 // TODO: make start sequence nav steps editable, with dedicated text input in settings like regular nav steps
+
+
+// TODO: only store 3 widget IDs and not the last one (bc it prevents user from changing their ball in AC and having it stay after auto nav.. need to clear IDs 1st which sucks)
+//		 ... replace with just 'enter' nav step... bc that's all it should take to activate the last used texture once the dropdown is opened
 
 
 
@@ -101,9 +104,26 @@ void CustomBallOnline::everyGameTick() {
 		}
 
 		// determine if fast mode is possible
-		if (widgetIDs.size() == 4) {
+		if (widgetIDs.size() == 3) {
 			idsAreStored = true;
 		}
+
+		// testing
+		ServerWrapper onlineServer = gameWrapper->GetOnlineGame();
+
+		if (!onlineServer) {
+			LOG("server is null -_-");
+			return;
+		}
+
+		std::string matchType = onlineServer.GetMatchTypeName();
+		GameSettingPlaylistWrapper playlist = onlineServer.GetPlaylist();
+		if (!playlist) { return; }
+
+		std::string playlistName = playlist.GetName();
+		int playlistID = playlist.GetPlaylistId();
+		LOG("++ playlistName: {}", playlistName);
+		LOG("++ playlistID: {}", playlistID);
 	}
 }
 
@@ -157,16 +177,15 @@ void CustomBallOnline::frameRenderCallback() {
 
 			 startSequence();
 
-			// after start sequence
+			// after start sequence	(start sequence takes 5 steps)
 			if (stepCounter >= 5) {
 
 				// if a fastmode run
 				bool fastModeEnabled = cvarManager->getCvar("enableFastMode").getBoolValue();
 				if (fastModeEnabled && idsAreStored) {
-					int widgetIndex = stepCounter - 5;
-
-					// check if index is in range
-					if (widgetIndex < widgetIDs.size() + 1) {
+					// make sure index is in range
+					if ((stepCounter - 5) >= 0 && (stepCounter - 5) < widgetIDs.size()) {
+						int widgetIndex = stepCounter - 5;
 						ImGuiID currentSavedID = widgetIDs[widgetIndex];
 					
 						// dsm
@@ -179,13 +198,17 @@ void CustomBallOnline::frameRenderCallback() {
 							activateBasedOnID(currentSavedID);
 						}
 					}
+					// the next step after all the IDs in widgetIDs have been activated
+					else if ((stepCounter - 5) == widgetIDs.size()) {
+						navInput("enter");
+					}
 					// else... there must be no more steps/IDs
 					else {
 						LOG("... no more IDs to activate");
 						gameWrapper->Execute([this](GameWrapper* gw) {
 							cvarManager->getCvar("autoNavActive").setValue(false);
 							cvarManager->executeCommand("sleep 200; navInput exit");
-							LOG("........ was a fast mode run");
+							LOG("........ t'was a fast mode run");
 							});
 						return;
 					}
@@ -261,7 +284,7 @@ void CustomBallOnline::navInput(std::string keyName) {
 		ImGui::KeepAliveID(currentHighlightedID);
 
 		if (((unsigned long)currentHighlightedID > 0) && stepCounter > 4) {
-				if (widgetIDs.size() < 4) {
+				if (widgetIDs.size() < 3) {
 					widgetIDs.push_back(currentHighlightedID);
 				}
 		}
