@@ -1,5 +1,5 @@
-# Custom-Ball-Online
-BakkesMod plugin that automates the process of enabling custom ball textures in online matches
+# Custom Ball Online (BakkesMod plugin)
+Automates the process of enabling custom ball textures in online matches
 
 <br>
 
