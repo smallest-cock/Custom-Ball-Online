@@ -1,14 +1,33 @@
 #include "pch.h"
 #include "CustomBallOnline.h"
 
+
+void ClickableLink(const char* label, const char* url) {
+    for (int i = 0; i < 12; i++) {
+		ImGui::Indent();
+    }
+    if (ImGui::Selectable(label, false, ImGuiSelectableFlags_NoHoldingActiveID, ImVec2(250,15))) {
+        ShellExecute(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+    }
+    for (int i = 0; i < 12; i++) {
+		ImGui::Unindent();
+    }
+}
+
+
 void CustomBallOnline::RenderSettings() {
     // steps
     CVarWrapper navigationStepsCvar = cvarManager->getCvar("navigationSteps");
+    CVarWrapper startSequenceStepsCvar = cvarManager->getCvar("startSequenceSteps");
+
+    // playlists
+    CVarWrapper automaticActivationPlaylistsCvar = cvarManager->getCvar("automaticActivationPlaylists");
 
     // delays
     CVarWrapper navDelayCvar = cvarManager->getCvar("autoNavDelay");
     CVarWrapper startNavDelayCvar = cvarManager->getCvar("startNavDelay");
     CVarWrapper delayDurationCvar = cvarManager->getCvar("delayDuration");
+    CVarWrapper delayAfterJoinMatchCvar = cvarManager->getCvar("delayAfterJoinMatch");
 
     // commands
     CVarWrapper startCommandCvar = cvarManager->getCvar("startCommand");
@@ -19,25 +38,45 @@ void CustomBallOnline::RenderSettings() {
     CVarWrapper enableFastModeCvar = cvarManager->getCvar("enableFastMode");
 
 
-
-    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Automated menu navigation");
-
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
+    
 
     // automatically run at the start of each match
     bool runOnMatchStart = runOnMatchStartCvar.getBoolValue();
-    if (ImGui::Checkbox("Automatically run at the start of each match", &runOnMatchStart)) {
+    if (ImGui::Checkbox("Automatically run after joining a match", &runOnMatchStart)) {
         runOnMatchStartCvar.setValue(runOnMatchStart);
     }
 
     ImGui::Spacing();
     ImGui::Spacing();
+
+    if (runOnMatchStart) {
+		// delay after OnAllTeamsCreated event .... aka when to automatically run enableBallTexture command
+		float delayAfterJoinMatch = delayAfterJoinMatchCvar.getFloatValue();
+		ImGui::SliderFloat("automatic start delay\t(after joining a match)", &delayAfterJoinMatch, 0.0f, 5.0f, "%.1f seconds");
+		delayAfterJoinMatchCvar.setValue(delayAfterJoinMatch);
+
+        ImGui::Spacing();
+        ImGui::Spacing();
+
+        // playlist IDs to automatically run at start of match
+        std::string automaticActivationPlaylists = automaticActivationPlaylistsCvar.getStringValue();
+        ImGui::InputTextWithHint("playlist IDs\t(game modes to use custom ball texture)", "1 2 6 13 34 ...", &automaticActivationPlaylists);
+        automaticActivationPlaylistsCvar.setValue(automaticActivationPlaylists);
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("these playlists should use the default RL soccar ball\t\t**text field must only contain numbers and spaces**");
+        }
+        ClickableLink("\t(click to see list of available playlist IDs)", "https://wiki.bakkesplugins.com/code_snippets/playlist_id/");
+    }
+
+
     ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
 
     ImGui::Text("\t\t\t\t\t\t\t\tor");
 
@@ -47,9 +86,14 @@ void CustomBallOnline::RenderSettings() {
 
     ImGui::Text("bind the  ");
     ImGui::SameLine();
-    ImGui::TextColored(ImVec4(1, 1, 0, 1), "enableBallTexture");
+    //ImGui::TextColored(ImVec4(1, 1, 0, 1), "enableBallTexture");
+    ImGui::PushItemWidth(110);
+    std::string commandToBeCopied = "enableBallTexture";
+    ImGui::InputText("", &commandToBeCopied, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopItemWidth();
     ImGui::SameLine();
     ImGui::Text("  command");
+
 
     ImGui::Spacing();
     ImGui::Spacing();
@@ -69,7 +113,12 @@ void CustomBallOnline::RenderSettings() {
 			clearWidgetIDs();
         }
     }
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("searches for menu items directly instead of using 'blind' navigation steps (can be more reliable & faster)");
+    }
 
+
+    ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
@@ -80,30 +129,20 @@ void CustomBallOnline::RenderSettings() {
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
+    
 
-    // navigation steps
-    std::string beforeSteps = navigationStepsCvar.getStringValue();
-    ImGui::InputTextWithHint("menu navigation steps", "navigation words: enter, back, up, down, left, right, delay, exit", &beforeSteps);
-    navigationStepsCvar.setValue(beforeSteps);
-    if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("starts after the 'Disable Safe Mode' button is highlighted");
-    }
+    // Delay durations
+    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Delay durations");
 
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
 
     // start delay
     float startDelay = startNavDelayCvar.getFloatValue();
-    ImGui::SliderFloat("start delay", &startDelay, 0.0f, 5.0f, "%.1f seconds");
+    ImGui::SliderFloat("start navigation delay", &startDelay, 0.0f, 5.0f, "%.1f seconds");
     startNavDelayCvar.setValue(startDelay);
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("gives bakkesmod time to reload AlphaConsole");
+        ImGui::SetTooltip("gives bakkesmod time to reload AlphaConsole before attempting navigation steps");
     }
 
     ImGui::Spacing();
@@ -111,10 +150,10 @@ void CustomBallOnline::RenderSettings() {
 
     // navigation step delay
     int delay = navDelayCvar.getIntValue();
-    ImGui::SliderInt("navigation delay (lower is faster)", &delay, 2, 100, "%.0f frames");      // maybe make slider logarithmic .... dont think ImGuiSliderFlags_Logarithmic exists in v1.75 :(
+    ImGui::SliderInt("navigation delay\t(lower is faster)", &delay, 2, 100, "%.0f frames");      // ImGuiSliderFlags_Logarithmic exists in v1.75 :(
     navDelayCvar.setValue(delay);
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("menu navigation speed depends on your game fps (higher fps = faster navigation) ... super low delay may cause errors");
+        ImGui::SetTooltip("menu navigation speed ... depends on your game fps (higher fps = faster navigation) ... super low delay may cause errors");
     }
 
     ImGui::Spacing();
@@ -122,16 +161,54 @@ void CustomBallOnline::RenderSettings() {
     
     // delay duration
     float delayDuration = delayDurationCvar.getFloatValue();
-    ImGui::SliderFloat("duration of a \"delay\" step", &delayDuration, 0.0f, 5.0f, "%.1f seconds");
+    ImGui::SliderFloat("additional delay after a \"makeSureLoaded\" step", &delayDuration, 0.0f, 3.0f, "%.1f seconds");
     delayDurationCvar.setValue(delayDuration);
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("gives AlphaConsole time to load all its modules");
+        ImGui::SetTooltip("gives some extra time to make sure everything is loaded before resuming navigation");
     }
+
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+
+    // Menu navigation steps
+    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Menu navigation steps");
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    // start sequence steps
+    std::string startSequenceSteps = startSequenceStepsCvar.getStringValue();
+    ImGui::InputTextWithHint("start sequence\t(steps to highlight 'Disable Safe Mode')", "navigation words: enter, back, up, down, left, right, focus, makeSureLoaded, exit", &startSequenceSteps);
+    startSequenceStepsCvar.setValue(startSequenceSteps);
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("should end with the 'Disable Safe Mode' button highlighted (but not pressed)");
+    }
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    // remaining navigation steps
+    std::string remainingSteps = navigationStepsCvar.getStringValue();
+    ImGui::InputTextWithHint("remaining steps", "navigation words: enter, back, up, down, left, right, focus, makeSureLoaded, exit", &remainingSteps);
+    navigationStepsCvar.setValue(remainingSteps);
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("navigation steps to perform after the 'Disable Safe Mode' button has been highlighted");
+    }
+
     
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
+
+
+    // Commands
+    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Commands");
+
     ImGui::Spacing();
     ImGui::Spacing();
 
@@ -148,6 +225,7 @@ void CustomBallOnline::RenderSettings() {
     ImGui::InputTextWithHint("exit command", "exit command", &exitCommand);
     exitCommandCvar.setValue(exitCommand);
 
+
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
@@ -156,7 +234,7 @@ void CustomBallOnline::RenderSettings() {
     ImGui::Spacing();
 
 
-    if (ImGui::Button("clear saved IDs")) {
+    if (ImGui::Button("clear saved menu item IDs")) {
         clearWidgetIDs();
     }
 }

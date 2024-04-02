@@ -4,17 +4,14 @@ BakkesMod plugin that automates the process of enabling custom ball textures in 
 <br>
 
 >[!IMPORTANT]
->Must be using an [older version of AlphaConsole](./AC%20stuff/AlphaConsole.md) for custom ball textures to work in online matches
+>Must be using an [older version of AlphaConsole](./AC%20stuff/AlphaConsole.md) for custom ball textures to work in online matches!
 
-<br>
-Can also be used to automate other things in bakkesmod menus
-<br>
 <br>
 
 ## 🎮 How to use
 
 1. Check the option to run at the start of each match (in plugin settings) ... and/or bind the `enableBallTexture` command
-     - With the [Custom Bindings Plugin](https://bakkesplugins.com/plugins/view/228) you can create controller bindings like **triangle + left**
+     - With the [Custom Bindings Plugin](https://bakkesplugins.com/plugins/view/228) you can create custom controller bindings like **triangle + left**
 
 2. Have a ball texture selected in AlphaConsole
    

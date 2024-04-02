@@ -6,6 +6,7 @@
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
 
 #include <windows.h>
+#include <shellapi.h>
 #include <chrono>
 #include <format>
 #include <iostream>
@@ -23,7 +24,8 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	//Boilerplate
 	void onLoad() override;
 
-	// Auto nav stuff
+	// Auto nav stuff and such
+	void onJoinedMatch();
 	void enableBallTexture();
 	void frameRenderCallback();
 	void startNav();
@@ -32,16 +34,26 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	void everyGameTick();
 	void clearWidgetIDs();
 	void resetNavVariables();
+	bool focusedItemHasChanged();
+	bool checkIfACLoaded();
+	bool checkPlaylist();
+	bool playlistExists();
 	void navInput(std::string);
 	static int frameCounter;
 	static int stepCounter;
 	static int delayCounter;
 	static int delayStepAmount;
 	static int activatedWidgetCount;
+	static int focusDidntChangeCount;
+	static int stepRetries;
 	static bool delay;
+	static bool finnaEndDelay;
 	static bool idsAreStored;
+	static bool playlistFound;
 	static std::vector<ImGuiID> widgetIDs;
+	static std::vector<ImGuiID> highlightedWidgets;
 	static std::vector<std::string> navigationSteps;
+	static std::vector<std::string> startSequenceSteps;
 	static std::vector<int> acceptablePlaylistIDs;
 
 public:

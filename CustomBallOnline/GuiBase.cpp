@@ -3,7 +3,7 @@
 
 std::string SettingsWindowBase::GetPluginName()
 {
-	return "CustomBallOnline";
+	return "Custom Ball Online";
 }
 
 void SettingsWindowBase::SetImGuiContext(uintptr_t ctx)
