@@ -20,6 +20,9 @@ void CustomBallOnline::onLoad()
 	// Enable keyboard navigation
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
+	//// Enable gamepad navigation
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
 	//// Enable mouse to follow navigation steps
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
 	
@@ -32,8 +35,8 @@ void CustomBallOnline::onLoad()
 	cvarManager->registerCvar("automaticActivationPlaylists", "1 2 3 4 6 10 11 13 16 18 19 22 28 34 41 50 52 55", "playlists to automatically enable ball texture", true);
 
 	// step cvars
+	cvarManager->registerCvar("startSequenceSteps", "focus back resetNav down enter up down down", "start sequence steps", true);
 	cvarManager->registerCvar("navigationSteps", "enter makeSureLoaded up up right activate down down down down enter enter exit", "menu navigation steps", true);
-	cvarManager->registerCvar("startSequenceSteps", "focus back down enter up down down", "start sequence steps", true);
 	
 	// delay cvars
 	cvarManager->registerCvar("startNavDelay", "1", "start delay", true, true, 0, true, 100);
@@ -45,6 +48,12 @@ void CustomBallOnline::onLoad()
 	cvarManager->registerCvar("autoNavActive", "0", "flag for checking if automatic menu navigation is active", true, true, 0, true, 1);
 	cvarManager->registerCvar("runOnMatchStart", "1", "automatically run enableBallTexture at the beginning of a match", true, true, 0, true, 1);
 	cvarManager->registerCvar("enableFastMode", "1", "enable fast navigation mode", true, true, 0, true, 1);
+
+	// retries
+	cvarManager->registerCvar("startSequenceRetryLimit", "4", "start sequence retry limit", true, true, 0, true, 50);
+	cvarManager->registerCvar("startSequenceRetryThreshold", "4", "start sequence retry cutoff", true, true, 1, true, 50);
+	cvarManager->registerCvar("navStepRetryLimit", "10", "navigation step retry limit", true, true, 0, true, 100);
+
 
 
 	// register console commands

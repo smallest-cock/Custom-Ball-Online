@@ -33,6 +33,11 @@ void CustomBallOnline::RenderSettings() {
     CVarWrapper startCommandCvar = cvarManager->getCvar("startCommand");
     CVarWrapper exitCommandCvar = cvarManager->getCvar("exitCommand");
 
+    // retry CVars
+    CVarWrapper startSequenceRetryLimitCvar = cvarManager->getCvar("startSequenceRetryLimit");
+    CVarWrapper startSequenceRetryThresholdCvar = cvarManager->getCvar("startSequenceRetryThreshold");
+    CVarWrapper navStepRetryLimitCvar = cvarManager->getCvar("navStepRetryLimit");
+
     // bools
     CVarWrapper runOnMatchStartCvar = cvarManager->getCvar("runOnMatchStart");
     CVarWrapper enableFastModeCvar = cvarManager->getCvar("enableFastMode");
@@ -153,7 +158,7 @@ void CustomBallOnline::RenderSettings() {
     ImGui::SliderInt("navigation delay\t(lower is faster)", &delay, 2, 100, "%.0f frames");      // ImGuiSliderFlags_Logarithmic exists in v1.75 :(
     navDelayCvar.setValue(delay);
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("menu navigation speed ... depends on your game fps (higher fps = faster navigation) ... super low delay may cause errors");
+        ImGui::SetTooltip("menu navigation speed ... depends on your game fps (higher fps = faster navigation)");
     }
 
     ImGui::Spacing();
@@ -224,6 +229,51 @@ void CustomBallOnline::RenderSettings() {
     std::string exitCommand = exitCommandCvar.getStringValue();
     ImGui::InputTextWithHint("exit command", "exit command", &exitCommand);
     exitCommandCvar.setValue(exitCommand);
+
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+
+    // Commands
+    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Retries");
+    if (ImGui::IsItemHovered()) {
+        std::string retryLimitTooltip = "if menu navigation isn't working properly";
+        ImGui::SetTooltip(retryLimitTooltip.c_str());
+    }
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    // start sequence retry cutoff step
+    int startSequenceRetryThreshold = startSequenceRetryThresholdCvar.getIntValue();
+    ImGui::SliderInt("retry start sequence after this step\t(if nothing is highlighted)", &startSequenceRetryThreshold, 1, 10, "step %.0f");
+    startSequenceRetryThresholdCvar.setValue(startSequenceRetryThreshold);
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    // start sequence retry limit
+    int startSequenceRetryLimit = startSequenceRetryLimitCvar.getIntValue();
+    ImGui::SliderInt("start sequence retry limit", &startSequenceRetryLimit, 0, 10, "%.0f retries");
+    startSequenceRetryLimitCvar.setValue(startSequenceRetryLimit);
+    if (ImGui::IsItemHovered()) {
+        std::string retryLimitTooltip = "max # of times to retry the start sequence";
+        ImGui::SetTooltip(retryLimitTooltip.c_str());
+    }
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    // navigation step retry limit
+    int navStepRetryLimit = navStepRetryLimitCvar.getIntValue();
+    ImGui::SliderInt("navigation step retry limit", &navStepRetryLimit, 0, 50, "%.0f retries");
+    navStepRetryLimitCvar.setValue(navStepRetryLimit);
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("max # of times to retry a navigation step (in remaining steps), if no item is highlighted after it's performed");
+    }
 
 
     ImGui::Spacing();

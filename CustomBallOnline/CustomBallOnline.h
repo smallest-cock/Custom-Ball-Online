@@ -34,6 +34,8 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	void everyGameTick();
 	void clearWidgetIDs();
 	void resetNavVariables();
+	void retryStartSequence();
+	void unhookFromTickEvent();
 	bool focusedItemHasChanged();
 	bool checkIfACLoaded();
 	bool checkPlaylist();
@@ -46,10 +48,15 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	static int activatedWidgetCount;
 	static int focusDidntChangeCount;
 	static int stepRetries;
+	static int startSequenceRetries;
+	static int navStepRetries;
+	static int lastRetriedStep;
 	static bool delay;
 	static bool finnaEndDelay;
 	static bool idsAreStored;
 	static bool playlistFound;
+	static bool startSequenceFocusChanged;
+	static ImGuiID firstHighlightedItem;
 	static std::vector<ImGuiID> widgetIDs;
 	static std::vector<ImGuiID> highlightedWidgets;
 	static std::vector<std::string> navigationSteps;
