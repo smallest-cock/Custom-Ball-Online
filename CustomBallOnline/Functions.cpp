@@ -260,7 +260,7 @@ void CustomBallOnline::everyGameTick() {
 // -------  goal: remaining navigation steps should start from the same position every time (no variance)  ---------
 // start sequence should leave off with 'Disable Safe Mode' button highlighted/focused (but not clicked) every time
 void CustomBallOnline::startSequence() {
-	LOG("------------------------------------------------");		// visual aid to distinguish different steps in console
+	//LOG("------------------------------------------------");		// visual aid to distinguish different steps in console
 
 
 	// detect if focus has changed (from the 1st non-zero item ID found)
@@ -270,15 +270,18 @@ void CustomBallOnline::startSequence() {
 			ImGuiID currentFocusedItem = ImGui::GetFocusID();
 			if (currentFocusedItem > 0) {
 
+				//LOG(">>> this is value of firstHightlightedItem: {} <<<", firstHighlightedItem);
+
 				// save the first highlighted item with a non-zero ID
 				if (firstHighlightedItem == 420) {
 					firstHighlightedItem = currentFocusedItem;
-					LOG("<<< saved the first non-zero focus ID: {} >>>", firstHighlightedItem);
+					LOG("<<< saved the first non-zero focus ID: {} >>>", currentFocusedItem);
 				}
 
 				if (currentFocusedItem != firstHighlightedItem) {
 					startSequenceFocusChanged = true;
-					LOG("<<< start sequence item focus has changed :) >>>");
+					LOG("<<< start sequence navigation focus has changed :) >>>");
+					LOG("<<<\t{}\t!=\t{}\t>>>", currentFocusedItem, firstHighlightedItem);
 				}
 			}
 		}
@@ -375,6 +378,12 @@ void CustomBallOnline::frameRenderCallback() {
 	// on every x amount of frames
 	int navDelay = cvarManager->getCvar("autoNavDelay").getIntValue();
 	if (frameCounter % navDelay == 0) {
+
+		// debug logging
+		LOG("------------------------------------------------");		// visual aid to distinguish different steps in console
+		ImGuiID currentFocusID = ImGui::GetFocusID();
+		LOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
+		LOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
 
 		startSequence();
 
@@ -579,9 +588,9 @@ void CustomBallOnline::navInput(std::string keyName) {
 
 	// debug logging
 	//LOG("------------------------------------------------");
-	ImGuiID currentFocusID = ImGui::GetFocusID();
-	LOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
-	LOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
+	//ImGuiID currentFocusID = ImGui::GetFocusID();
+	//LOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
+	//LOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
 
 
 	LOG("[nav stepCounter {}] simulated *** {} ***", stepCounter, keyName);
@@ -600,10 +609,9 @@ void CustomBallOnline::retryStartSequence() {
 	if (startSequenceRetries < startSequenceRetryLimit) {
 		// retry start sequence and hope something gets focused
 		stepCounter = 0;
-		firstHighlightedItem == 420;
+		firstHighlightedItem = 420;
 		startSequenceFocusChanged = false;
 		LOG("retrying start sequence........");
-		return;
 	}
 	else {
 		// exit run ... bc something fucked up
@@ -611,7 +619,6 @@ void CustomBallOnline::retryStartSequence() {
 		LOG(".... exiting because something in the start sequence is fucked and needs fixing");
 		cvarManager->getCvar("autoNavActive").setValue(false);
 		cvarManager->executeCommand("sleep 200; navInput exit");
-		return;
 	}
 	startSequenceRetries++;
 }
@@ -652,7 +659,9 @@ bool CustomBallOnline::checkPlaylist() {
 	LOG("++ playlistName: {}", playlistName);
 	LOG("++ playlistID: {}", playlistID);
 
-	return std::find(acceptablePlaylistIDs.begin(), acceptablePlaylistIDs.end(), playlistID) != acceptablePlaylistIDs.end();
+	bool playlistIsValid = std::find(acceptablePlaylistIDs.begin(), acceptablePlaylistIDs.end(), playlistID) != acceptablePlaylistIDs.end();
+	LOG("++ should activate custom ball in this playlist: {}", playlistIsValid);
+	return playlistIsValid;
 }
 
 
@@ -685,7 +694,7 @@ void CustomBallOnline::resetNavVariables() {
 	delay = false;
 	finnaEndDelay = false;
 	startSequenceFocusChanged = false;
-	firstHighlightedItem == 420;
+	firstHighlightedItem = 420;
 	highlightedWidgets.clear();
 	focusDidntChangeCount = 0;
 	startSequenceRetries = 0;
