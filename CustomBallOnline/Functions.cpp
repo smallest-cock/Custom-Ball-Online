@@ -52,7 +52,7 @@ std::vector<int> parseInts(const std::string& input) {
 			LOG("***\t... make sure the text only contains numbers and spaces\t***");
 		}
 	}
-	LOG("{} playlists will automatically enable custom ball texture once joined the match", playlistIDs.size());
+	DEBUGLOG("{} playlists will automatically enable custom ball texture once joined the match", playlistIDs.size());
 	return playlistIDs;
 }
 
@@ -176,8 +176,8 @@ bool CustomBallOnline::checkIfACLoaded() {
 
 	std::string wheelTexture = acCvar.getStringValue();
 
-	LOG("successfully accessed acplugin_wheeltexture_selectedtexture_orange CVar :)");
-	LOG("... its value is: {}", wheelTexture);
+	DEBUGLOG("successfully accessed acplugin_wheeltexture_selectedtexture_orange CVar :)");
+	DEBUGLOG("... its value is: {}", wheelTexture);
 
 	return true;
 }
@@ -212,7 +212,7 @@ void CustomBallOnline::everyGameTick() {
 
 			if (delayCounter < 1000) {
 				if (checkIfACLoaded()) {
-					LOG("AC has been loaded and we finna set delay = false after the delay duration...");
+					DEBUGLOG("AC has been loaded and we finna set delay = false after the delay duration...");
 					finnaEndDelay = true;
 					float delayDuration = cvarManager->getCvar("delayDuration").getFloatValue();
 					gameWrapper->SetTimeout([this](...) {
@@ -275,13 +275,13 @@ void CustomBallOnline::startSequence() {
 				// save the first highlighted item with a non-zero ID
 				if (firstHighlightedItem == 420) {
 					firstHighlightedItem = currentFocusedItem;
-					LOG("<<< saved the first non-zero focus ID: {} >>>", currentFocusedItem);
+					LOG("<<< saved the first non-zero ID: {} >>>", currentFocusedItem);
 				}
 
 				if (currentFocusedItem != firstHighlightedItem) {
 					startSequenceFocusChanged = true;
-					LOG("<<< start sequence navigation focus has changed :) >>>");
-					LOG("<<<\t{}\t!=\t{}\t>>>", currentFocusedItem, firstHighlightedItem);
+					LOG("<<< start sequence navigation ID has changed :) >>>");
+					DEBUGLOG("<<<\t{}\t!=\t{}\t>>>", currentFocusedItem, firstHighlightedItem);
 				}
 			}
 		}
@@ -328,7 +328,7 @@ void CustomBallOnline::startSequence() {
 				if (navStepRetries < navStepRetryLimit) {
 					// retry step that didnt get executed because nothing was focused
 					stepCounter--;
-					LOG("... decremented step counter in order to retry last step");
+					DEBUGLOG("... decremented step counter in order to retry last step");
 					LOG("retrying nav step........");
 					navStepRetries++;
 					return;
@@ -362,7 +362,7 @@ void CustomBallOnline::startSequence() {
 			if (idsAreStored) {
 				// check if the current highlighted ID is the same as the 1st ID in the stored list (stored DSM ID)
 				if (!(currentHighlightedID == widgetIDs[0])) {
-					LOG("~~ stored DSM ID ({}) is invalid.. the valid ID is now {} ~~", widgetIDs[0], currentHighlightedID);
+					DEBUGLOG("~~ stored DSM ID ({}) is invalid.. the valid ID is now {} ~~", widgetIDs[0], currentHighlightedID);
 					clearWidgetIDs();
 				}
 			}
@@ -380,10 +380,10 @@ void CustomBallOnline::frameRenderCallback() {
 	if (frameCounter % navDelay == 0) {
 
 		// debug logging
-		LOG("------------------------------------------------");		// visual aid to distinguish different steps in console
+		DEBUGLOG("------------------------------------------------");		// visual aid to distinguish different steps in console
 		ImGuiID currentFocusID = ImGui::GetFocusID();
-		LOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
-		LOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
+		DEBUGLOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
+		DEBUGLOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
 
 		startSequence();
 
@@ -528,7 +528,7 @@ void CustomBallOnline::navInput(std::string keyName) {
 	else if (keyName == "idInfo") {
 		ImGuiWindow *acWin = ImGui::FindWindowByName("AlphaConsole Plugin");
 		if (acWin) {
-			LOG("[resetNav] seems like acWin aint null ....");
+			DEBUGLOG("[resetNav] seems like acWin aint null ....");
 			ImGuiID lastItem = acWin->DC.LastItemId;
 			LOG("this should be the ID of the last item in the AC window: {}", lastItem);
 			ImGuiID lastNavID = acWin->NavLastIds[0];
@@ -565,7 +565,7 @@ void CustomBallOnline::navInput(std::string keyName) {
 
 		ImGuiWindow* acWin = ImGui::FindWindowByName("AlphaConsole Plugin");
 		if (acWin) {
-			LOG("[focus] seems like acWin aint null ....");
+			DEBUGLOG("[focus] seems like acWin aint null ....");
 			ImGui::FocusWindow(acWin);
 		}
 		else {
@@ -593,7 +593,8 @@ void CustomBallOnline::navInput(std::string keyName) {
 	//LOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
 
 
-	LOG("[nav stepCounter {}] simulated *** {} ***", stepCounter, keyName);
+	DEBUGLOG("[nav stepCounter {}] simulated *** {} ***", stepCounter, keyName);
+	LOG("[Step {}] simulated *** {} ***", (stepCounter + 1), keyName);
 }
 
 

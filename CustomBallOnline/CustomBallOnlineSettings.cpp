@@ -178,113 +178,118 @@ void CustomBallOnline::RenderSettings() {
     ImGui::Spacing();
     ImGui::Spacing();
 
+    if (ImGui::CollapsingHeader("Additional settings", ImGuiTreeNodeFlags_None))
+    {
+        ImGui::Spacing();
+        ImGui::Spacing();
 
-    // Menu navigation steps
-    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Menu navigation steps");
+		ImGui::TextColored(ImVec4(1, 1, 0, 1), "Menu navigation steps");
 
-    ImGui::Spacing();
-    ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
 
-    // start sequence steps
-    std::string startSequenceSteps = startSequenceStepsCvar.getStringValue();
-    ImGui::InputTextWithHint("start sequence\t(steps to highlight 'Disable Safe Mode')", "navigation words: enter, back, up, down, left, right, focus, makeSureLoaded, exit", &startSequenceSteps);
-    startSequenceStepsCvar.setValue(startSequenceSteps);
-    if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("should end with the 'Disable Safe Mode' button highlighted (but not pressed)");
+		// start sequence steps
+		std::string startSequenceSteps = startSequenceStepsCvar.getStringValue();
+		ImGui::InputTextWithHint("start sequence\t(steps to highlight 'Disable Safe Mode')", "navigation words: enter, back, up, down, left, right, focus, makeSureLoaded, exit", &startSequenceSteps);
+		startSequenceStepsCvar.setValue(startSequenceSteps);
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("should end with the 'Disable Safe Mode' button highlighted (but not pressed)");
+		}
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// remaining navigation steps
+		std::string remainingSteps = navigationStepsCvar.getStringValue();
+		ImGui::InputTextWithHint("remaining steps", "navigation words: enter, back, up, down, left, right, focus, makeSureLoaded, exit", &remainingSteps);
+		navigationStepsCvar.setValue(remainingSteps);
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("navigation steps to perform after the 'Disable Safe Mode' button has been highlighted");
+		}
+
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+
+		// Commands
+		ImGui::TextColored(ImVec4(1, 1, 0, 1), "Commands");
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// start command
+		std::string startCommand = startCommandCvar.getStringValue();
+		ImGui::InputTextWithHint("start command", "start command", &startCommand);
+		startCommandCvar.setValue(startCommand);
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// exit command
+		std::string exitCommand = exitCommandCvar.getStringValue();
+		ImGui::InputTextWithHint("exit command", "exit command", &exitCommand);
+		exitCommandCvar.setValue(exitCommand);
+
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+
+		// Commands
+		ImGui::TextColored(ImVec4(1, 1, 0, 1), "Retries");
+		if (ImGui::IsItemHovered()) {
+			std::string retryLimitTooltip = "if menu navigation isn't working properly";
+			ImGui::SetTooltip(retryLimitTooltip.c_str());
+		}
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// start sequence retry cutoff step
+		int startSequenceRetryThreshold = startSequenceRetryThresholdCvar.getIntValue();
+		ImGui::SliderInt("retry start sequence after this step\t(if nothing is highlighted)", &startSequenceRetryThreshold, 1, 10, "step %.0f");
+		startSequenceRetryThresholdCvar.setValue(startSequenceRetryThreshold);
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// start sequence retry limit
+		int startSequenceRetryLimit = startSequenceRetryLimitCvar.getIntValue();
+		ImGui::SliderInt("start sequence retry limit", &startSequenceRetryLimit, 0, 10, "%.0f retries");
+		startSequenceRetryLimitCvar.setValue(startSequenceRetryLimit);
+		if (ImGui::IsItemHovered()) {
+			std::string retryLimitTooltip = "max # of times to retry the start sequence";
+			ImGui::SetTooltip(retryLimitTooltip.c_str());
+		}
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// navigation step retry limit
+		int navStepRetryLimit = navStepRetryLimitCvar.getIntValue();
+		ImGui::SliderInt("navigation step retry limit", &navStepRetryLimit, 0, 50, "%.0f retries");
+		navStepRetryLimitCvar.setValue(navStepRetryLimit);
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("max # of times to retry a navigation step (in remaining steps), if no item is highlighted after it's performed");
+		}
+
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+
+		if (ImGui::Button("clear saved menu item IDs")) {
+			clearWidgetIDs();
+		}
     }
 
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    // remaining navigation steps
-    std::string remainingSteps = navigationStepsCvar.getStringValue();
-    ImGui::InputTextWithHint("remaining steps", "navigation words: enter, back, up, down, left, right, focus, makeSureLoaded, exit", &remainingSteps);
-    navigationStepsCvar.setValue(remainingSteps);
-    if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("navigation steps to perform after the 'Disable Safe Mode' button has been highlighted");
-    }
-
-    
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-
-    // Commands
-    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Commands");
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    // start command
-    std::string startCommand = startCommandCvar.getStringValue();
-    ImGui::InputTextWithHint("start command", "start command", &startCommand);
-    startCommandCvar.setValue(startCommand);
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    // exit command
-    std::string exitCommand = exitCommandCvar.getStringValue();
-    ImGui::InputTextWithHint("exit command", "exit command", &exitCommand);
-    exitCommandCvar.setValue(exitCommand);
-
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-
-    // Commands
-    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Retries");
-    if (ImGui::IsItemHovered()) {
-        std::string retryLimitTooltip = "if menu navigation isn't working properly";
-        ImGui::SetTooltip(retryLimitTooltip.c_str());
-    }
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    // start sequence retry cutoff step
-    int startSequenceRetryThreshold = startSequenceRetryThresholdCvar.getIntValue();
-    ImGui::SliderInt("retry start sequence after this step\t(if nothing is highlighted)", &startSequenceRetryThreshold, 1, 10, "step %.0f");
-    startSequenceRetryThresholdCvar.setValue(startSequenceRetryThreshold);
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    // start sequence retry limit
-    int startSequenceRetryLimit = startSequenceRetryLimitCvar.getIntValue();
-    ImGui::SliderInt("start sequence retry limit", &startSequenceRetryLimit, 0, 10, "%.0f retries");
-    startSequenceRetryLimitCvar.setValue(startSequenceRetryLimit);
-    if (ImGui::IsItemHovered()) {
-        std::string retryLimitTooltip = "max # of times to retry the start sequence";
-        ImGui::SetTooltip(retryLimitTooltip.c_str());
-    }
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    // navigation step retry limit
-    int navStepRetryLimit = navStepRetryLimitCvar.getIntValue();
-    ImGui::SliderInt("navigation step retry limit", &navStepRetryLimit, 0, 50, "%.0f retries");
-    navStepRetryLimitCvar.setValue(navStepRetryLimit);
-    if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("max # of times to retry a navigation step (in remaining steps), if no item is highlighted after it's performed");
-    }
-
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-
-    if (ImGui::Button("clear saved menu item IDs")) {
-        clearWidgetIDs();
-    }
 }
