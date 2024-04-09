@@ -492,11 +492,6 @@ void CustomBallOnline::frameRenderCallback() {
 
 
 void CustomBallOnline::navInput(std::string keyName) {
-
-
-	// TODO: maybe map the different possible keyNames to an enum, and use switch statement with enum for sexier code
-
-
 	ImGuiIO& io = ImGui::GetIO();
 	io.NavActive = true;
 	io.NavVisible = true;
@@ -585,12 +580,6 @@ void CustomBallOnline::navInput(std::string keyName) {
 	else {
 		LOG("*** Error: {} is not a valid navigation step ***");
 	}
-
-	// debug logging
-	//LOG("------------------------------------------------");
-	//ImGuiID currentFocusID = ImGui::GetFocusID();
-	//LOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
-	//LOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
 
 
 	DEBUGLOG("[nav stepCounter {}] simulated *** {} ***", stepCounter, keyName);
