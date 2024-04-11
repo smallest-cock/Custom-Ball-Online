@@ -28,7 +28,7 @@ void CustomBallOnline::onLoad()
 	
 
 	// command cvars
-	cvarManager->registerCvar("startCommand", "plugin reload acplugin; sleep 500; openmenu ac_main", "command to run before auto menu navigation", true);
+	cvarManager->registerCvar("startCommand", "plugin reload acplugin; sleep 200; openmenu ac_main", "command to run before auto menu navigation", true);
 	cvarManager->registerCvar("exitCommand", "closemenu ac_main", "command to run after auto menu navigation finished", true);
 
 	// playlists
@@ -39,10 +39,10 @@ void CustomBallOnline::onLoad()
 	cvarManager->registerCvar("navigationSteps", "enter makeSureLoaded up up right activate down down down down enter enter exit", "menu navigation steps", true);
 	
 	// delay cvars
-	cvarManager->registerCvar("startNavDelay", "1", "start delay", true, true, 0, true, 100);
+	cvarManager->registerCvar("startNavDelay", "1", "start delay", true, true, .2, true, 100);
 	cvarManager->registerCvar("autoNavDelay", "2", "navigation delay", true, true, 1, true, 500);
 	cvarManager->registerCvar("delayDuration", "0.2", "duration of a makeSureLoaded step", true, true, 0, true, 5);
-	cvarManager->registerCvar("delayAfterJoinMatch", "0", "duration of a delay step", true, true, 0, true, 5);
+	cvarManager->registerCvar("delayAfterJoinMatch", "0", "how long to wait after joining a match to run", true, true, 0, true, 5);
 
 	// bool cvars
 	cvarManager->registerCvar("autoNavActive", "0", "flag for checking if automatic menu navigation is active", true, true, 0, true, 1);
@@ -111,19 +111,26 @@ void CustomBallOnline::onLoad()
 	// test run with a specific navigation delay value
 	cvarManager->registerNotifier("customBallOnline_test", [this](std::vector<std::string> args) {
 
-		CVarWrapper navDelayCvar = cvarManager->getCvar("autoNavDelay");
+		// if nav delay and sleep time are specified
+		if (args.size() == 3) {
+			CVarWrapper navDelayCvar = cvarManager->getCvar("autoNavDelay");
 
-		if (!navDelayCvar) { return; }
+			if (!navDelayCvar) { return; }
 
-		int newDelay = std::stoi(args[1]);
+			int newDelay = std::stoi(args[1]);
 
-		navDelayCvar.setValue(newDelay);
+			navDelayCvar.setValue(newDelay);
 
-		float waitBeforeRunning = std::stof(args[2]);
+			float waitBeforeRunning = std::stof(args[2]);
 
-		std::string command = std::to_string(waitBeforeRunning * 1000);
+			std::string command = std::to_string(waitBeforeRunning * 1000);
 
-		cvarManager->executeCommand("plugin reload acplugin; sleep 1000; load_freeplay; sleep " + command + "; enableBallTexture");
+			cvarManager->executeCommand("plugin reload acplugin; sleep 1000; load_freeplay; sleep " + command + "; enableBallTexture");
+		}
+		else {
+			cvarManager->executeCommand("plugin reload acplugin; sleep 1000; load_freeplay; sleep 5000; enableBallTexture");
+		}
+
 
 	}, "", PERMISSION_ALL);
 

@@ -241,18 +241,6 @@ void CustomBallOnline::everyGameTick() {
 	}
 	else {
 		unhookFromTickEvent();
-
-		// determine if fast mode is possible
-		if (widgetIDs.size() == 3) {
-			idsAreStored = true;
-		}
-
-		// logging
-		for (int i = 0; i < widgetIDs.size(); i++) {
-			LOG("widget id {}: {}", i + 1, widgetIDs[i]);
-		}
-		//checkPlaylist();
-		LOG("+++\tnumber of nav steps that didnt change the highlighted item: {}", focusDidntChangeCount);
 	}
 }
 
@@ -362,7 +350,7 @@ void CustomBallOnline::startSequence() {
 			if (idsAreStored) {
 				// check if the current highlighted ID is the same as the 1st ID in the stored list (stored DSM ID)
 				if (!(currentHighlightedID == widgetIDs[0])) {
-					DEBUGLOG("~~ stored DSM ID ({}) is invalid.. the valid ID is now {} ~~", widgetIDs[0], currentHighlightedID);
+					LOG("~~ stored DSM ID ({}) is invalid.. the valid ID is now {} ~~", widgetIDs[0], currentHighlightedID);
 					clearWidgetIDs();
 				}
 			}
@@ -394,13 +382,16 @@ void CustomBallOnline::frameRenderCallback() {
 			bool fastModeEnabled = cvarManager->getCvar("enableFastMode").getBoolValue();
 			if (fastModeEnabled && idsAreStored) {
 
-				// repeat step if necessary
-				if (!focusedItemHasChanged()) {
-					if (stepRetries < 3) {
+				int widgetIndex = stepCounter - startSequenceSteps.size();
+
+				// repeat last step if necessary (except if last step was 1st widget ID ... bc focus after DSM doesnt change immediately, resulting in false positive)
+				if (!focusedItemHasChanged() && widgetIndex > 1) {
+					if (stepRetries < 3) {		// 3 retries is currently hardcoded... maybe eventually turn into CVar and add to settings
 						stepCounter--;
+						widgetIndex--;
 						stepRetries++;
 
-						LOG("****\trepeated activation by ID\t****");
+						LOG("****\trepeating activation by ID\t****");
 					}
 					else {
 						stepRetries = 0;
@@ -412,8 +403,7 @@ void CustomBallOnline::frameRenderCallback() {
 
 
 				// make sure index is in range
-				if ((stepCounter - startSequenceSteps.size()) >= 0 && (stepCounter - startSequenceSteps.size()) < widgetIDs.size()) {
-					int widgetIndex = stepCounter - startSequenceSteps.size();
+				if (widgetIndex >= 0 && widgetIndex < widgetIDs.size()) {
 					ImGuiID currentSavedID = widgetIDs[widgetIndex];
 
 					// dsm
@@ -435,7 +425,7 @@ void CustomBallOnline::frameRenderCallback() {
 					LOG("... no more IDs to activate");
 					cvarManager->getCvar("autoNavActive").setValue(false);
 					cvarManager->executeCommand("sleep 200; navInput exit");
-					LOG("........ t'was a fast mode run");
+					LOG("<<<\tt'was a fast mode run\t>>>");
 					return;
 				}
 			}
@@ -673,6 +663,19 @@ void CustomBallOnline::activateBasedOnID(ImGuiID id) {
 void CustomBallOnline::unhookFromTickEvent() {
 	gameWrapper->UnhookEvent("Function Engine.GameViewportClient.Tick");
 	LOG("<<<\tunhooked from game tick event...\t>>>");
+
+	// determine if fast mode is possible
+	if (widgetIDs.size() == 3) {
+		idsAreStored = true;
+	}
+
+	// logging
+	LOG(".....................");
+	for (int i = 0; i < widgetIDs.size(); i++) {
+		LOG("Saved widget ID {}: {}", i + 1, widgetIDs[i]);
+	}
+	//checkPlaylist();
+	DEBUGLOG("+++\tnumber of nav steps that didnt change the highlighted item: {}", focusDidntChangeCount);
 }
 
 

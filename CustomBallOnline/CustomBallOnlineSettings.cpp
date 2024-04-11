@@ -144,7 +144,7 @@ void CustomBallOnline::RenderSettings() {
 
     // start delay
     float startDelay = startNavDelayCvar.getFloatValue();
-    ImGui::SliderFloat("start navigation delay", &startDelay, 0.0f, 5.0f, "%.1f seconds");
+    ImGui::SliderFloat("start navigation delay", &startDelay, 0.2f, 5.0f, "%.1f seconds");
     startNavDelayCvar.setValue(startDelay);
     if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("gives bakkesmod time to reload AlphaConsole before attempting navigation steps");
