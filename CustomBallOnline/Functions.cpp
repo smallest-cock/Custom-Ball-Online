@@ -231,6 +231,7 @@ void CustomBallOnline::automateNav() {
 				if (!startSequenceFocusChanged) {
 					LOG("*** start sequence steps are done and item focus ID hasnt changed :( ***");
 					retryStartSequence();
+					return;
 				}
 
 				// clear widget IDs if necessary
@@ -361,8 +362,10 @@ void CustomBallOnline::blindMode() {
 
 				if ((prevStep == "up" || prevStep == "down" || prevStep == "right" || prevStep == "enter") && currentStep != "makeSureLoaded") {
 					if (stepRetries < 3) {
-						stepCounter--;
 						stepRetries++;
+						stepCounter--;
+						// update navStepIndex based on new stepCount
+						navStepIndex--;
 
 						LOG("****\trepeated [{}] step\t****", prevStep);
 					}
@@ -376,8 +379,6 @@ void CustomBallOnline::blindMode() {
 	else {
 		stepRetries = 0;
 	}
-	// update navStepIndex with new stepCount
-	navStepIndex = stepCounter - startSequenceSteps.size();
 
 
 	// execute next nav step
