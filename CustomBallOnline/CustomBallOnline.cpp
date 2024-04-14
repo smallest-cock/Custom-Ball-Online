@@ -35,7 +35,7 @@ void CustomBallOnline::onLoad()
 	cvarManager->registerCvar("automaticActivationPlaylists", "1 2 3 4 6 10 11 13 16 18 19 22 28 34 41 50 52 55", "playlists to automatically enable ball texture", true);
 
 	// step cvars
-	cvarManager->registerCvar("startSequenceSteps", "focus back resetNav down enter up down down", "start sequence steps", true);
+	cvarManager->registerCvar("startSequenceSteps", "focus up enter down down", "start sequence steps", true);
 	cvarManager->registerCvar("navigationSteps", "enter makeSureLoaded up up right activate down down down down enter enter exit", "menu navigation steps", true);
 	
 	// delay cvars
@@ -75,6 +75,12 @@ void CustomBallOnline::onLoad()
 		navInput(args[1]);
 	}, "", PERMISSION_ALL);
 	
+	cvarManager->registerNotifier("customBallOnline_testSomething", [this](std::vector<std::string> args) {
+
+		// testing grounds ...
+
+	}, "", PERMISSION_ALL);
+	
 
 	// activate a specific widget based on its ImGuiID
 	cvarManager->registerNotifier("activateID", [this](std::vector<std::string> args) {
@@ -93,7 +99,7 @@ void CustomBallOnline::onLoad()
 			}, 3);
 	}, "", PERMISSION_ALL);
 	
-	// get the ImGuiID for any highlighted widget, for 30s
+	// print the ImGuiID for highlighted widgets, for 30s
 	cvarManager->registerNotifier("getFocusID", [this](std::vector<std::string> args) {
 
 		for (int i = 1; i < 30; i++) {

@@ -25,21 +25,10 @@ ImGuiID CustomBallOnline::firstHighlightedItem = 420;
 
 
 
-std::vector<std::string> parseWords(const std::string& input) {
-	std::vector<std::string> words;
-	std::istringstream iss(input);
-	std::string word;
-	while (iss >> word) {
-		words.push_back(word);
-	}
-	return words;
-}
-
-
 std::vector<int> parseInts(const std::string& input) {
 	std::vector<int> playlistIDs = {};
 
-	std::vector<std::string> parsedStingInts = parseWords(input);
+	std::vector<std::string> parsedStingInts = CustomBallOnline::parseWords(input);
 	for ( std::string intStr : parsedStingInts) {
 		try
 		{
@@ -126,7 +115,6 @@ void CustomBallOnline::enableBallTexture() {
 	delayStepAmount = (int)((gameFramerate * delayDuration) / navDelay) + 1;		// let delay duration (seconds) be X .... X = delayAmount * (navDelay / gameFramerate)
 																					//										  X * gameFramerate = delayAmount * navDelay
 																					//									      (X * gameFramerate) / navDelay = delayAmount
-
 	cvarManager->executeCommand(startCommand);
 	cvarManager->executeCommand("startNav");
 }
@@ -159,12 +147,393 @@ void CustomBallOnline::startNav() {
 		LOG("cleared active ID (to make sure nothing else 'eats' the nav steps)");
 
 		gameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", [this](std::string eventName) {
-			everyGameTick();
+			gameTickCallback();
 		});
 		LOG("<<<\thooked into game tick event\t>>>");
 
 	}, startDelay);
 }
+
+
+// ran on every game tick (when game tick event is hooked)
+void CustomBallOnline::gameTickCallback() {
+	bool navActive = cvarManager->getCvar("autoNavActive").getBoolValue();
+
+	// if there are more navigation steps to perform
+	if (navActive) {
+
+		// if delay is active
+		if (delay) {
+			if (finnaEndDelay) { return; }
+
+			if (delayCounter < 1000) {
+				if (checkIfACLoaded()) {
+					DEBUGLOG("AC has been loaded and we finna set delay = false after the delay duration...");
+					finnaEndDelay = true;
+					float delayDuration = cvarManager->getCvar("delayDuration").getFloatValue();
+					gameWrapper->SetTimeout([this](...) {
+						finnaEndDelay = false;
+						delay = false;
+						delayCounter = 0;
+					}, delayDuration);
+				}
+			}
+			// unhook from tick event if AlphaConsole Cvar isn't found after 1000 frames (something probably went wrong)
+			else {
+				unhookFromTickEvent();
+
+				LOG("... something went wrong :(");
+				LOG("... make sure the start sequence is good");
+
+				// abort on error exit command ... maybe make editable?
+				std::string exitCommand = cvarManager->getCvar("exitCommand").getStringValue();
+				cvarManager->executeCommand(exitCommand);
+			}
+			delayCounter++;
+		}
+		// if no delay
+		else {
+			automateNav();
+		}
+	}
+
+	// if navigation is finished
+	else {
+		unhookFromTickEvent();
+	}
+}
+
+
+// to be ran when menu navigation is active (no delay)
+void CustomBallOnline::automateNav() {
+	frameCounter++;
+
+	// on every x amount of frames
+	int navDelay = cvarManager->getCvar("autoNavDelay").getIntValue();
+	if (frameCounter % navDelay == 0) {
+
+		// debug logging
+		DEBUGLOG("------------------------------------------------");		// visual aid to distinguish different steps in console
+		ImGuiID currentFocusID = ImGui::GetFocusID();
+		DEBUGLOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
+		DEBUGLOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
+
+
+		// determine if in start sequence or remaining steps
+		if (stepCounter < startSequenceSteps.size()) {
+			startSequence();
+		}
+		else {
+			// on the next step after start sequence has completed
+			if (stepCounter == startSequenceSteps.size()) {
+
+				// retry start sequence if it was "stuck" the entire time (causing navigation steps to have no effect)
+				if (!startSequenceFocusChanged) {
+					LOG("*** start sequence steps are done and item focus ID hasnt changed :( ***");
+					retryStartSequence();
+				}
+
+				// clear widget IDs if necessary
+				LOG("~~~ 'Disable Safe Mode' button should be highlighted rn... if it's not, startSequence() needs fixing ~~~");
+				ImGuiID currentHighlightedID = ImGui::GetFocusID();
+				if ((unsigned long)currentHighlightedID > 0) {
+					if (idsAreStored) {
+						// check if the current highlighted ID is the same as the 1st ID in the stored list (stored DSM ID)
+						if (!(currentHighlightedID == widgetIDs[0])) {
+							LOG("~~ stored DSM ID ({}) is invalid.. the valid ID is now {} ~~", widgetIDs[0], currentHighlightedID);
+							clearWidgetIDs();
+						}
+					}
+				}
+			}
+			remainingSteps();
+		}
+		stepCounter++;
+	}
+}
+
+
+// -------  goal: remaining navigation steps should start from the same position every time (no variance)  ---------
+// start sequence should leave off with 'Disable Safe Mode' button highlighted/focused (but not clicked) every time
+void CustomBallOnline::startSequence() {
+
+	// retry start sequence if no item is highlighted by x step ...
+	CVarWrapper startSequenceRetryThresholdCvar = cvarManager->getCvar("startSequenceRetryThreshold");
+	if (!startSequenceRetryThresholdCvar) {
+		LOG("*** startSequenceRetryThresholdCvar is null!! ***");
+		return;
+	}
+	int startSequenceRetryThreshold = startSequenceRetryThresholdCvar.getIntValue();
+	
+	if ((stepCounter > (startSequenceRetryThreshold - 1)) && !ImGui::IsAnyItemFocused()) {
+		LOG("*** we're past step {} in start sequence and no item is currently focused ***", startSequenceRetryThreshold);
+		retryStartSequence();
+	}
+
+
+	// detect if focus has changed (from the 1st non-zero item ID found)
+	if (!startSequenceFocusChanged) {
+		// ignore the 1st step 
+		if (stepCounter > 0) {
+			ImGuiID currentFocusedItem = ImGui::GetFocusID();
+			if (currentFocusedItem > 0) {
+
+				// save the first highlighted item with a non-zero ID
+				if (firstHighlightedItem == 420) {
+					firstHighlightedItem = currentFocusedItem;
+					LOG("<<< saved the first non-zero ID: {} >>>", currentFocusedItem);
+				}
+
+				if (currentFocusedItem != firstHighlightedItem) {
+					startSequenceFocusChanged = true;
+					LOG("<<< start sequence navigation ID has changed :) >>>");
+					DEBUGLOG("<<<\t{}\t!=\t{}\t>>>", currentFocusedItem, firstHighlightedItem);
+				}
+			}
+		}
+	}
+
+	// perform step
+	if (stepCounter < startSequenceSteps.size()) {
+		navInput(startSequenceSteps[stepCounter]);
+	}
+}
+
+
+// for remaining steps ...
+void CustomBallOnline::remainingSteps() {
+
+	// repeat step if necessary, if no item is highlighted
+	if (!ImGui::IsAnyItemFocused()) {
+
+		LOG("*** we're in remaining steps and no item is currently focused ***");
+
+		// get retry limit
+		CVarWrapper navStepRetryLimitCvar = cvarManager->getCvar("navStepRetryLimit");
+		if (!navStepRetryLimitCvar) {
+			LOG("*** navStepRetryLimitCvar is null! ***");
+			return;
+		}
+		int navStepRetryLimit = navStepRetryLimitCvar.getIntValue();
+
+		// determine whether to reset nav step retry counter (if current step is different than lastRetriedStep)
+		if (stepCounter > lastRetriedStep) {
+			navStepRetries = 0;
+			lastRetriedStep = stepCounter;
+		}
+
+		if (navStepRetries < navStepRetryLimit) {
+			// retry step that didnt get executed because nothing was focused
+			stepCounter--;
+			DEBUGLOG("... decremented step counter in order to retry last step");
+			LOG("retrying nav step........");
+			navStepRetries++;
+			return;
+		}
+		else {
+			// maybe do something here if the nav step retries reached the limit ... like exit
+			// ... or do nothing, which will just move on to the next step 
+		}
+	}
+
+	// determine whether to do a fast mode or a regular "blind" mode step
+	bool fastModeEnabled = cvarManager->getCvar("enableFastMode").getBoolValue();
+	if (fastModeEnabled && idsAreStored) {
+		fastMode();
+	}
+	else {
+		blindMode();
+	}
+}
+
+
+// regular navigation using "blind" steps
+void CustomBallOnline::blindMode() {
+	int navStepIndex = stepCounter - startSequenceSteps.size();
+
+	// repeat step if necessary
+	if (!focusedItemHasChanged()) {
+		if ((navStepIndex - 1) >= 0) {
+			std::string prevStep = navigationSteps[navStepIndex - 1];
+
+			if (navStepIndex < navigationSteps.size()) {
+				std::string currentStep = navigationSteps[navStepIndex];
+
+				if ((prevStep == "up" || prevStep == "down" || prevStep == "right" || prevStep == "enter") && currentStep != "makeSureLoaded") {
+					if (stepRetries < 3) {
+						stepCounter--;
+						stepRetries++;
+
+						LOG("****\trepeated [{}] step\t****", prevStep);
+					}
+					else {
+						stepRetries = 0;
+					}
+				}
+			}
+		}
+	}
+	else {
+		stepRetries = 0;
+	}
+	// update navStepIndex with new stepCount
+	navStepIndex = stepCounter - startSequenceSteps.size();
+
+
+	// execute next nav step
+	if (navStepIndex < navigationSteps.size()) {
+		std::string currentStep = navigationSteps[navStepIndex];
+		navInput(currentStep);
+	}
+	// if all nav steps are finished
+	else {
+		LOG("... no more nav steps");
+		cvarManager->getCvar("autoNavActive").setValue(false);
+		unhookFromTickEvent();
+	}
+}
+
+
+// "smart" menu navigation using IDs to activate items
+void CustomBallOnline::fastMode() {
+	int widgetIndex = stepCounter - startSequenceSteps.size();
+
+	// repeat last step if necessary (except if last step was 1st widget ID ... bc focus after DSM doesnt change immediately, resulting in false positive)
+	if (!focusedItemHasChanged() && widgetIndex > 3) {
+		if (stepRetries < 3) {		// 3 retries is currently hardcoded... maybe eventually turn into CVar and add to settings
+			stepCounter--;
+			widgetIndex--;
+			stepRetries++;
+
+			LOG("****\trepeating activation by ID\t****");
+		}
+		else {
+			stepRetries = 0;
+		}
+	}
+	else {
+		stepRetries = 0;
+	}
+
+
+	// make sure index is in range
+	if (widgetIndex >= 0 && widgetIndex < widgetIDs.size()) {
+		ImGuiID currentSavedID = widgetIDs[widgetIndex];
+
+		// dsm
+		if (widgetIndex == 0) {
+			activateBasedOnID(currentSavedID);
+			delay = true;
+		}
+		// others
+		else {
+			activateBasedOnID(currentSavedID);
+		}
+	}
+	// the next step after all the IDs in widgetIDs have been activated
+	else if ((stepCounter - startSequenceSteps.size()) == widgetIDs.size()) {
+		navInput("enter");
+	}
+	// else... there must be no more steps/IDs
+	else {
+		LOG("... no more IDs to activate");
+		cvarManager->getCvar("autoNavActive").setValue(false);
+		cvarManager->executeCommand("sleep 200; navInput exit");
+		LOG("<<<\tt'was a fast mode run\t>>>");
+	}
+}
+
+
+void CustomBallOnline::navInput(const std::string& keyName) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.NavActive = true;
+	io.NavVisible = true;
+
+	if (keyName == "up") {
+		io.NavInputs[ImGuiNavInput_DpadUp] = 1.0f;
+	}
+	else if (keyName == "down") {
+		io.NavInputs[ImGuiNavInput_DpadDown] = 1.0f;
+	}
+	else if (keyName == "left") {
+		io.NavInputs[ImGuiNavInput_DpadLeft] = 1.0f;
+	}
+	else if (keyName == "right") {
+		io.NavInputs[ImGuiNavInput_DpadRight] = 1.0f;
+	}
+	else if (keyName == "enter" || keyName == "activate") {
+		ImGuiID currentHighlightedID = ImGui::GetFocusID();
+		ImGui::KeepAliveID(currentHighlightedID);
+
+		if (((unsigned long)currentHighlightedID > 0) && stepCounter >= startSequenceSteps.size()) {
+				if (widgetIDs.size() < 3) {
+					widgetIDs.push_back(currentHighlightedID);
+				}
+		}
+		io.NavInputs[ImGuiNavInput_Activate] = 1.0f;
+		ImGui::KeepAliveID(currentHighlightedID);
+	}
+	else if (keyName == "back") {
+		io.NavInputs[ImGuiNavInput_Cancel] = 1.0f;
+	}
+	else if (keyName == "alt") {
+		io.NavInputs[ImGuiNavInput_KeyMenu_] = 1.0f;
+	}
+	else if (keyName == "resetNav") {
+		GImGui->NavId = 0;
+	}
+	else if (keyName == "focus") {
+		// get all windows
+		ImVector<ImGuiWindow*> windows = GImGui->Windows;
+
+		// find the active AC window containing the DSM button ... and bring focus to it
+		for (ImGuiWindow* window : windows) {
+			if (window) {
+				std::string winName(window->Name);
+				DEBUGLOG("window name is: {}", winName);
+
+				bool isNavFocusable = ImGui::IsWindowNavFocusable(window);
+				DEBUGLOG("window nav is focusable: {}", isNavFocusable);
+
+				bool windowActive = window->Active;
+				DEBUGLOG("window is active: {}", windowActive);
+
+				// find the AC window that's a child of the main window ... and active
+				if ((winName.find("AlphaConsole Plugin/") != std::string::npos) && window->Active) {
+
+					// lil extra tidbit, just because
+					ImVec2 winSize = window->Size;
+					LOG("AC (child) window size: x-{}, y-{}", winSize[0], winSize[1]);
+
+					// focus the window (and by window im 83% sure its referring to the big rectangular sub-section of the main window containing the "contents")
+					ImGui::FocusWindow(window);
+					ImGui::BringWindowToFocusFront(window);
+				}
+			}
+			else {
+				DEBUGLOG("window ptr is null :(");
+			}
+		}
+	}
+	else if (keyName == "makeSureLoaded") {
+		delay = true;
+	}
+	else if (keyName == "exit") {
+		std::string exitCommand = cvarManager->getCvar("exitCommand").getStringValue();
+		cvarManager->executeCommand(exitCommand);
+	}
+	else {
+		LOG("*** Error: {} is not a valid navigation step ***");
+	}
+
+
+	DEBUGLOG("[nav stepCounter {}] simulated *** {} ***", stepCounter, keyName);
+	LOG("[Step {}] simulated *** {} ***", (stepCounter + 1), keyName);
+}
+
+
+
+// ---------------------------------------- lil helper functions --------------------------------------------------------------
 
 
 bool CustomBallOnline::checkIfACLoaded() {
@@ -200,380 +569,6 @@ bool CustomBallOnline::focusedItemHasChanged() {
 		highlightedWidgets.push_back(currentlyHighlightedItem);
 		return true;
 	}
-}
-
-
-void CustomBallOnline::everyGameTick() {
-	// check if should run callback
-	bool navActive = cvarManager->getCvar("autoNavActive").getBoolValue();
-	if (navActive) {
-		if (delay) {
-			if (finnaEndDelay) { return; }
-
-			if (delayCounter < 1000) {
-				if (checkIfACLoaded()) {
-					DEBUGLOG("AC has been loaded and we finna set delay = false after the delay duration...");
-					finnaEndDelay = true;
-					float delayDuration = cvarManager->getCvar("delayDuration").getFloatValue();
-					gameWrapper->SetTimeout([this](...) {
-						finnaEndDelay = false;
-						delay = false;
-						delayCounter = 0;
-					}, delayDuration);
-				}
-			}
-			// unhook from tick event if AlphaConsole Cvar isn't found after 1000 frames (something probably went wrong)
-			else {
-				unhookFromTickEvent();
-
-				LOG("... something went wrong :(");
-				LOG("... make sure the start sequence is good");
-
-				// abort on error exit command ... maybe make editable?
-				std::string exitCommand = cvarManager->getCvar("exitCommand").getStringValue();
-				cvarManager->executeCommand(exitCommand);
-			}
-			delayCounter++;
-		}
-		else {
-			frameRenderCallback();
-		}
-	}
-	else {
-		unhookFromTickEvent();
-	}
-}
-
-
-// -------  goal: remaining navigation steps should start from the same position every time (no variance)  ---------
-// start sequence should leave off with 'Disable Safe Mode' button highlighted/focused (but not clicked) every time
-void CustomBallOnline::startSequence() {
-	//LOG("------------------------------------------------");		// visual aid to distinguish different steps in console
-
-
-	// detect if focus has changed (from the 1st non-zero item ID found)
-	if (!startSequenceFocusChanged) {
-		// ignore the 1st & 2nd steps 
-		if (stepCounter > 1) {
-			ImGuiID currentFocusedItem = ImGui::GetFocusID();
-			if (currentFocusedItem > 0) {
-
-				//LOG(">>> this is value of firstHightlightedItem: {} <<<", firstHighlightedItem);
-
-				// save the first highlighted item with a non-zero ID
-				if (firstHighlightedItem == 420) {
-					firstHighlightedItem = currentFocusedItem;
-					LOG("<<< saved the first non-zero ID: {} >>>", currentFocusedItem);
-				}
-
-				if (currentFocusedItem != firstHighlightedItem) {
-					startSequenceFocusChanged = true;
-					LOG("<<< start sequence navigation ID has changed :) >>>");
-					DEBUGLOG("<<<\t{}\t!=\t{}\t>>>", currentFocusedItem, firstHighlightedItem);
-				}
-			}
-		}
-	}
-
-
-	// after x nav step, check if any item is highlighted... to determine if start sequence (or a remaining nav step) needs to be retried
-	CVarWrapper startSequenceRetryThresholdCvar = cvarManager->getCvar("startSequenceRetryThreshold");
-	if (!startSequenceRetryThresholdCvar) {
-		LOG("*** startSequenceRetryThresholdCvar is null!! ***");
-		return;
-	}
-	int startSequenceRetryThreshold = startSequenceRetryThresholdCvar.getIntValue();
-
-	// if past x start sequence step
-	if (stepCounter > (startSequenceRetryThreshold - 1)) {
-
-		// if no item is highlighted
-		if (!ImGui::IsAnyItemFocused()) {
-
-			// if still in start sequence
-			if (stepCounter <= startSequenceSteps.size()) {
-				LOG("*** we're past step {} in start sequence and no item is currently focused ***", startSequenceRetryThreshold);
-				retryStartSequence();
-			}
-			// if in remaining steps
-			else {
-				LOG("*** we're done with start sequence and no item is currently focused ***");
-				
-				// get retry limit
-				CVarWrapper navStepRetryLimitCvar = cvarManager->getCvar("navStepRetryLimit");
-				if (!navStepRetryLimitCvar) {
-					LOG("*** navStepRetryLimitCvar is null!! ***");
-					return;
-				}
-				int navStepRetryLimit = navStepRetryLimitCvar.getIntValue();
-
-				// determine whether to reset nav step retry counter (if current step is different than lastRetriedStep)
-				if (stepCounter > lastRetriedStep) {
-					navStepRetries = 0;
-					lastRetriedStep = stepCounter;
-				}
-
-				if (navStepRetries < navStepRetryLimit) {
-					// retry step that didnt get executed because nothing was focused
-					stepCounter--;
-					DEBUGLOG("... decremented step counter in order to retry last step");
-					LOG("retrying nav step........");
-					navStepRetries++;
-					return;
-				}
-				else {
-					// maybe do something here if the nav step retries reached the limit ... like exit
-					// ... or do nothing, which will just move on to the next step 
-				}
-			}
-		}
-	}
-
-
-	// start sequence steps
-	if (stepCounter < startSequenceSteps.size()) {
-		navInput(startSequenceSteps[stepCounter]);
-	}
-
-	// after start sequence nav steps have completed... DSM should be highlighted/focused at this point (but not pressed)
-	else if (stepCounter == startSequenceSteps.size()) {
-
-		// make sure start sequence wasnt stuck on one item the entire time (causing navigation steps to not take effect)
-		if (!startSequenceFocusChanged) {
-			LOG("*** start sequence steps are done and the focus ID hasnt changed :( ***");
-			retryStartSequence();
-		}
-
-		LOG("~~~ 'Disable Safe Mode' button should be highlighted rn... if it's not, startSequence() needs fixing ~~~");
-		ImGuiID currentHighlightedID = ImGui::GetFocusID();
-		if ((unsigned long)currentHighlightedID > 0) {
-			if (idsAreStored) {
-				// check if the current highlighted ID is the same as the 1st ID in the stored list (stored DSM ID)
-				if (!(currentHighlightedID == widgetIDs[0])) {
-					LOG("~~ stored DSM ID ({}) is invalid.. the valid ID is now {} ~~", widgetIDs[0], currentHighlightedID);
-					clearWidgetIDs();
-				}
-			}
-		}
-	}
-}
-
-
-// to be ran on each UI frame during auto nav
-void CustomBallOnline::frameRenderCallback() {
-	frameCounter++;
-
-	// on every x amount of frames
-	int navDelay = cvarManager->getCvar("autoNavDelay").getIntValue();
-	if (frameCounter % navDelay == 0) {
-
-		// debug logging
-		DEBUGLOG("------------------------------------------------");		// visual aid to distinguish different steps in console
-		ImGuiID currentFocusID = ImGui::GetFocusID();
-		DEBUGLOG("[nav stepCounter {}] current focus ID: {}", stepCounter, currentFocusID);
-		DEBUGLOG("[nav stepCounter {}] IsAnyItemFocused() : {}", stepCounter, ImGui::IsAnyItemFocused());
-
-		startSequence();
-
-		// after start sequence
-		if (stepCounter >= startSequenceSteps.size()) {
-
-			// if a fastmode run
-			bool fastModeEnabled = cvarManager->getCvar("enableFastMode").getBoolValue();
-			if (fastModeEnabled && idsAreStored) {
-
-				int widgetIndex = stepCounter - startSequenceSteps.size();
-
-				// repeat last step if necessary (except if last step was 1st widget ID ... bc focus after DSM doesnt change immediately, resulting in false positive)
-				if (!focusedItemHasChanged() && widgetIndex > 1) {
-					if (stepRetries < 3) {		// 3 retries is currently hardcoded... maybe eventually turn into CVar and add to settings
-						stepCounter--;
-						widgetIndex--;
-						stepRetries++;
-
-						LOG("****\trepeating activation by ID\t****");
-					}
-					else {
-						stepRetries = 0;
-					}
-				}
-				else {
-					stepRetries = 0;
-				}
-
-
-				// make sure index is in range
-				if (widgetIndex >= 0 && widgetIndex < widgetIDs.size()) {
-					ImGuiID currentSavedID = widgetIDs[widgetIndex];
-
-					// dsm
-					if (widgetIndex == 0) {
-						activateBasedOnID(currentSavedID);
-						delay = true;
-					}
-					// others
-					else {
-						activateBasedOnID(currentSavedID);
-					}
-				}
-				// the next step after all the IDs in widgetIDs have been activated
-				else if ((stepCounter - startSequenceSteps.size()) == widgetIDs.size()) {
-					navInput("enter");
-				}
-				// else... there must be no more steps/IDs
-				else {
-					LOG("... no more IDs to activate");
-					cvarManager->getCvar("autoNavActive").setValue(false);
-					cvarManager->executeCommand("sleep 200; navInput exit");
-					LOG("<<<\tt'was a fast mode run\t>>>");
-					return;
-				}
-			}
-
-			// if a regular run
-			else {
-				int navStepIndex = stepCounter - startSequenceSteps.size();
-				
-				// repeat step if necessary
-				if (!focusedItemHasChanged()) {
-					if ((navStepIndex - 1) >= 0) {
-						std::string prevStep = navigationSteps[navStepIndex - 1];
-
-						if (navStepIndex < navigationSteps.size()) {
-							std::string currentStep = navigationSteps[navStepIndex];
-
-							if ((prevStep == "up" || prevStep == "down" || prevStep == "right" || prevStep == "enter") && currentStep != "makeSureLoaded") {
-								if (stepRetries < 3) {
-									stepCounter--;
-									stepRetries++;
-
-									LOG("****\trepeated [{}] step\t****", prevStep);
-								}
-								else {
-									stepRetries = 0;
-								}
-							}
-						}
-					}
-				}
-				else {
-					stepRetries = 0;
-				}
-
-				navStepIndex = stepCounter - startSequenceSteps.size();
-
-				// execute next nav step
-				if (navStepIndex < navigationSteps.size()) {
-					std::string currentStep = navigationSteps[navStepIndex];
-					navInput(currentStep);
-				}
-				// if all nav steps are finished
-				else {
-					LOG("... no more nav steps");
-					cvarManager->getCvar("autoNavActive").setValue(false);
-					unhookFromTickEvent();
-					return;
-				}
-			}
-		}
-		stepCounter++;
-	}
-}
-
-
-void CustomBallOnline::navInput(std::string keyName) {
-	ImGuiIO& io = ImGui::GetIO();
-	io.NavActive = true;
-	io.NavVisible = true;
-
-	if (keyName == "up") {
-		io.NavInputs[ImGuiNavInput_DpadUp] = 1.0f;
-	}
-	else if (keyName == "down") {
-		io.NavInputs[ImGuiNavInput_DpadDown] = 1.0f;
-	}
-	else if (keyName == "left") {
-		io.NavInputs[ImGuiNavInput_DpadLeft] = 1.0f;
-	}
-	else if (keyName == "right") {
-		io.NavInputs[ImGuiNavInput_DpadRight] = 1.0f;
-	}
-	else if (keyName == "enter" || keyName == "activate") {
-		ImGuiID currentHighlightedID = ImGui::GetFocusID();
-		ImGui::KeepAliveID(currentHighlightedID);
-
-		if (((unsigned long)currentHighlightedID > 0) && stepCounter >= startSequenceSteps.size()) {
-				if (widgetIDs.size() < 3) {
-					widgetIDs.push_back(currentHighlightedID);
-				}
-		}
-		io.NavInputs[ImGuiNavInput_Activate] = 1.0f;
-		ImGui::KeepAliveID(currentHighlightedID);
-	}
-	else if (keyName == "idInfo") {
-		ImGuiWindow *acWin = ImGui::FindWindowByName("AlphaConsole Plugin");
-		if (acWin) {
-			DEBUGLOG("[resetNav] seems like acWin aint null ....");
-			ImGuiID lastItem = acWin->DC.LastItemId;
-			LOG("this should be the ID of the last item in the AC window: {}", lastItem);
-			ImGuiID lastNavID = acWin->NavLastIds[0];
-			LOG("this should be the last Nav ID for the AC window: {}", lastNavID);
-			
-			if (lastNavID == 0) {
-				ImVector<ImGuiID> acWinIDStack = acWin->IDStack;
-				if (!acWinIDStack.empty()) {
-					LOG("these are the IDs in the AC window ID stack ....");
-
-					for (int i = 0; i < acWinIDStack.size(); i++) {
-						LOG("[{}] -- {}", i, acWinIDStack[i]);
-					}
-				}
-			}
-
-		}
-		else {
-			LOG("acWin is null -_-");
-		}
-	}
-	else if (keyName == "back") {
-		io.NavInputs[ImGuiNavInput_Cancel] = 1.0f;
-	}
-	else if (keyName == "alt") {
-		io.NavInputs[ImGuiNavInput_KeyMenu_] = 1.0f;
-	}
-	else if (keyName == "resetNav") {
-		GImGui->NavId = 0;
-	}
-	else if (keyName == "focus") {
-		// idk if this is working
-		ImGui::SetWindowFocus("AlphaConsole Plugin");
-
-		ImGuiWindow* acWin = ImGui::FindWindowByName("AlphaConsole Plugin");
-		if (acWin) {
-			DEBUGLOG("[focus] seems like acWin aint null ....");
-			ImGui::FocusWindow(acWin);
-		}
-		else {
-			LOG("acWin is null -_-");
-		}
-
-		// idk if this has any effect (ID would already be 0)
-		GImGui->NavId = 0;
-	}
-	else if (keyName == "makeSureLoaded") {
-		delay = true;
-	}
-	else if (keyName == "exit") {
-		std::string exitCommand = cvarManager->getCvar("exitCommand").getStringValue();
-		cvarManager->executeCommand(exitCommand);
-	}
-	else {
-		LOG("*** Error: {} is not a valid navigation step ***");
-	}
-
-
-	DEBUGLOG("[nav stepCounter {}] simulated *** {} ***", stepCounter, keyName);
-	LOG("[Step {}] simulated *** {} ***", (stepCounter + 1), keyName);
 }
 
 
@@ -621,6 +616,7 @@ bool CustomBallOnline::playlistExists() {
 
 	return true;
 }
+
 
 bool CustomBallOnline::checkPlaylist() {
 	ServerWrapper onlineServer = gameWrapper->GetOnlineGame();
@@ -676,6 +672,17 @@ void CustomBallOnline::unhookFromTickEvent() {
 	}
 	//checkPlaylist();
 	DEBUGLOG("+++\tnumber of nav steps that didnt change the highlighted item: {}", focusDidntChangeCount);
+}
+
+
+std::vector<std::string> CustomBallOnline::parseWords(const std::string& input) {
+	std::vector<std::string> words;
+	std::istringstream iss(input);
+	std::string word;
+	while (iss >> word) {
+		words.push_back(word);
+	}
+	return words;
 }
 
 

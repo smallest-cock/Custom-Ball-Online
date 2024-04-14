@@ -8,7 +8,7 @@
 #include "bakkesmod/wrappers/cvarmanagerwrapper.h"
 
 extern std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-constexpr bool DEBUG_LOG = false;
+constexpr bool DEBUG_LOG = true;
 
 
 struct FormatString
@@ -65,23 +65,21 @@ void LOG(std::wstring_view format_str, Args&&... args)
 
 
 template <typename... Args>
-void DEBUGLOG(const FormatString& format_str, Args&&... args)
+void DEBUGLOG(std::string_view format_str, Args&&... args)
 {
 	if constexpr (DEBUG_LOG)
 	{
-		auto text = std::vformat(format_str.str, std::make_format_args(std::forward<Args>(args)...));
-		auto location = format_str.GetLocation();
-		_globalCvarManager->log(std::format("{} {}", text, location));
+		// just like regular logging
+		_globalCvarManager->log(std::vformat(format_str, std::make_format_args(std::forward<Args>(args)...)));
 	}
 }
 
 template <typename... Args>
-void DEBUGLOG(const FormatWstring& format_str, Args&&... args)
+void DEBUGLOG(std::wstring_view format_str, Args&&... args)
 {
 	if constexpr (DEBUG_LOG)
 	{
-		auto text = std::vformat(format_str.str, std::make_wformat_args(std::forward<Args>(args)...));
-		auto location = format_str.GetLocation();
-		_globalCvarManager->log(std::format(L"{} {}", text, location));
+		// just like regular logging
+		_globalCvarManager->log(std::vformat(format_str, std::make_wformat_args(std::forward<Args>(args)...)));
 	}
 }

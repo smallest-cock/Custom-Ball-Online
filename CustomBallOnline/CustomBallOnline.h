@@ -24,14 +24,10 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	//Boilerplate
 	void onLoad() override;
 
-	// Auto nav stuff and such
-	void onJoinedMatch();
-	void enableBallTexture();
-	void frameRenderCallback();
-	void startNav();
-	void startSequence();
+	// oink oink oink
+	void automateNav();
 	void activateBasedOnID(ImGuiID id);
-	void everyGameTick();
+	void gameTickCallback();
 	void clearWidgetIDs();
 	void resetNavVariables();
 	void retryStartSequence();
@@ -40,7 +36,18 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	bool checkIfACLoaded();
 	bool checkPlaylist();
 	bool playlistExists();
-	void navInput(std::string);
+
+	// ok pal
+	void onJoinedMatch();
+	void enableBallTexture();
+	void startNav();
+	void startSequence();
+	void remainingSteps();
+	void blindMode();
+	void fastMode();
+	void navInput(const std::string& step);
+
+
 	static int frameCounter;
 	static int stepCounter;
 	static int delayCounter;
@@ -64,5 +71,6 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	static std::vector<int> acceptablePlaylistIDs;
 
 public:
+	static std::vector<std::string> parseWords(const std::string& input);
 	void RenderSettings() override;
 };

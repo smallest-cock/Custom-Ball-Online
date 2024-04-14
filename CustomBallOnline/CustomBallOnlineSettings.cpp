@@ -91,7 +91,6 @@ void CustomBallOnline::RenderSettings() {
 
     ImGui::Text("bind the  ");
     ImGui::SameLine();
-    //ImGui::TextColored(ImVec4(1, 1, 0, 1), "enableBallTexture");
     ImGui::PushItemWidth(110);
     std::string commandToBeCopied = "enableBallTexture";
     ImGui::InputText("", &commandToBeCopied, ImGuiInputTextFlags_ReadOnly);
@@ -144,7 +143,7 @@ void CustomBallOnline::RenderSettings() {
 
     // start delay
     float startDelay = startNavDelayCvar.getFloatValue();
-    ImGui::SliderFloat("start navigation delay", &startDelay, 0.2f, 5.0f, "%.1f seconds");
+    ImGui::SliderFloat("start navigation delay", &startDelay, 0.3f, 5.0f, "%.1f seconds");
     startNavDelayCvar.setValue(startDelay);
     if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("gives bakkesmod time to reload AlphaConsole before attempting navigation steps");
@@ -251,8 +250,11 @@ void CustomBallOnline::RenderSettings() {
 		ImGui::Spacing();
 
 		// start sequence retry cutoff step
+        std::string startSteps = startSequenceStepsCvar.getStringValue();
+        int numStartSteps = parseWords(startSteps).size();
+
 		int startSequenceRetryThreshold = startSequenceRetryThresholdCvar.getIntValue();
-		ImGui::SliderInt("retry start sequence after this step\t(if nothing is highlighted)", &startSequenceRetryThreshold, 1, 10, "step %.0f");
+		ImGui::SliderInt("retry start sequence after this step\t(if nothing is highlighted)", &startSequenceRetryThreshold, 1, numStartSteps, "step %.0f");
 		startSequenceRetryThresholdCvar.setValue(startSequenceRetryThreshold);
 
 		ImGui::Spacing();
