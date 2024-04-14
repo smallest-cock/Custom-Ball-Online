@@ -269,6 +269,7 @@ void CustomBallOnline::startSequence() {
 	if ((stepCounter > (startSequenceRetryThreshold - 1)) && !ImGui::IsAnyItemFocused()) {
 		LOG("*** we're past step {} in start sequence and no item is currently focused ***", startSequenceRetryThreshold);
 		retryStartSequence();
+		stepCounter--;			// to offset the stepCounter++ which will be executed after this function returns (to keep stepCounter = 0, so 1st start sequence step doesnt get skipped)
 		return;
 	}
 
