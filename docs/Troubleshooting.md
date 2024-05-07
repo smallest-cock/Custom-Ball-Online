@@ -1,7 +1,27 @@
 <br>
 <br>
 
-Just... like... make sure you have good [settings](./Settings.md) my guy
+First... make sure you have good [settings](./Settings.md)
+
+## If ball texture only appears after a goal is scored
+This means the ball texture and/or the ball texture dropdown (in the AlphaConsole menu) isn't being activated
+
+One reason this can happen is if the steps listed your `remaining steps` (in plugin settings) are meant for Epic users, but you're on Steam... or vice versa. These are the correct steps for each platform:
+
+The default `remaining steps` for Epic users should be:
+
+```enter makeSureLoaded up up right activate down down down down enter enter exit```
+
+The default `remaining steps` for Steam users should be:
+
+```enter makeSureLoaded up up right activate down down enter enter exit```
+
+.....
+
+Notice how there are only 2 `down` steps for Steam, compared to the 4 for Epic. This is because Steam users don't need to navigate past the `Epic Avatar` dropdown (they don't have it):
+
+![](./images/epic_avatar.png)
+
 
 ## If menu navigation steps seem wrong
 

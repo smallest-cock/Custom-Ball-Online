@@ -27,6 +27,17 @@ void CustomBallOnline::onLoad()
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
 	
 
+	bool isEpic = gameWrapper->IsUsingEpicVersion();
+	bool isSteam = gameWrapper->IsUsingSteamVersion();
+	LOG("is on Epic version: {}", isEpic);
+	LOG("is on Steam version: {}", isSteam);
+
+
+	// Steam users dont have the 'Epic Avatar' dropdown at the top of the cosmetics tab like Epic users, so they need only 2 'down' steps to highlight 
+	// the ball texture dropdown
+	std::string navigationSteps = isEpic ? "enter makeSureLoaded up up right activate down down down down enter enter exit" : "enter makeSureLoaded up up right activate down down enter enter exit";
+
+
 	// command cvars
 	cvarManager->registerCvar("startCommand", "plugin reload acplugin; sleep 200; openmenu ac_main", "command to run before auto menu navigation", true);
 	cvarManager->registerCvar("exitCommand", "closemenu ac_main", "command to run after auto menu navigation finished", true);
@@ -36,7 +47,7 @@ void CustomBallOnline::onLoad()
 
 	// step cvars
 	cvarManager->registerCvar("startSequenceSteps", "focus up enter down down", "start sequence steps", true);
-	cvarManager->registerCvar("navigationSteps", "enter makeSureLoaded up up right activate down down down down enter enter exit", "menu navigation steps", true);
+	cvarManager->registerCvar("navigationSteps", navigationSteps, "menu navigation steps", true);
 	
 	// delay cvars
 	cvarManager->registerCvar("startNavDelay", "1", "start delay", true, true, .2, true, 100);

@@ -64,6 +64,9 @@ This is the sequence of steps that each run will start with. The goal is to leav
 ### remaining steps
 These are the remaining navigation steps to perform after the "Disable Safe Mode" button has been highlighted. These steps should activate the "Disable Safe Mode" button → wait for AlphaConsole to load its modules/menu → activate the "Cosmetics" tab → activate the ball texture dropdown → then activate the first highlighted option (which should be the most recent ball texture used)
 
+>[!IMPORTANT]
+>In the default `remaining steps`, there should only be 2 `down` steps for Steam users, but 4 `down` steps for Epic users. Make sure it's correct in your case.
+
 ## Commands
 ![](./images/commands.png)
 
