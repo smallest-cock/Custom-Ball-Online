@@ -16,8 +16,16 @@ Enables custom ball textures in online matches
 
 2. Have a ball texture selected in AlphaConsole
    
-3. Join a match and use your selected ball texture
+3. Join a match, and your last used ball texture should automatically be applied
 
+<br>
+
+>[!TIP]
+>Bind the `cbo_applyballtexture` command to manually apply the ball texture whenever you want
+>
+>(like, in case the texture wasn't automatically applied for some reason)
+
+<br>
 
 ## 🔧 How to install
 
@@ -27,6 +35,7 @@ Find the latest version in [Releases](https://github.com/smallest-cock/Custom-Ba
 
 2. Extract it, and run `install.bat`
 
+<br>
 
 ## 🚧 Errors / Troubleshooting
 
