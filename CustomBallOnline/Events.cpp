@@ -154,45 +154,36 @@ void CustomBallOnline::OnUpdateMipFromPNG(ActorWrapper caller, void* params, std
 //"Function Engine.Texture2DDynamic.Init"
 void CustomBallOnline::OnTextureInit(ActorWrapper caller, void* params, std::string eventName)
 {
+	//LOG("[HOOK]: {}", eventName); 
+
 	UTexture2DDynamic* tex = reinterpret_cast<UTexture2DDynamic*>(caller.memory_address);
 	if (!tex) return;
 
 	UTexture2DDynamic_execInit_Params* parameters = reinterpret_cast<UTexture2DDynamic_execInit_Params*>(params);
 	if (!params) return;
 
-	LOG("=============================================");
-	LOG("pixel format : {}", parameters->InFormat);
-	LOG("size: X: {} - Y: {}", parameters->InSizeX, parameters->InSizeY);
+	//LOG("=============================================");
+	//LOG("pixel format : {}", parameters->InFormat);
+	//LOG("size: X: {} - Y: {}", parameters->InSizeX, parameters->InSizeY);
 }
 
 
 //"Function Engine.MaterialInstance.SetTextureParameterValue"
 void CustomBallOnline::OnSetTexParamValue(ActorWrapper caller, void* parameters, std::string eventName)
 {
+	//LOG("[HOOK]: {}", eventName);
+
 	UMaterialInstance* mi = reinterpret_cast<UMaterialInstance*>(caller.memory_address);
 	if (!mi) return;
-
-	//unsigned long                                      bHasStaticPermutationResource : 1;             // 0x02A8 (0x0004) [0x0000000000000002] [0x00000001] (CPF_Const)
-	//unsigned long                                      bStaticPermutationDirty : 1;                   // 0x02A8 (0x0004) [0x0000000000003000] [0x00000002] (CPF_Native | CPF_Transient)
-	//unsigned long                                      ReentrantFlag : 1;                             // 0x02A8 (0x0004) [0x0000000000001002] [0x00000004] (CPF_Const | CPF_Native)
-	//unsigned long                                      bNeedsMaterialFlattening : 1;
-
-	//LOG("==============================================");
-	//LOG("bHasStaticPermutationResource: {}", (bool)mi->bHasStaticPermutationResource);
-	//LOG("bStaticPermutationDirty: {}", (bool)mi->bStaticPermutationDirty);
-	//LOG("bNeedsMaterialFlattening: {}", (bool)mi->bNeedsMaterialFlattening);
-	//LOG("ReentrantFlag: {}", (bool)mi->ReentrantFlag);
-	//LOG("==============================================");
-
-
 
 	UMaterialInstance_execSetTextureParameterValue_Params* params = reinterpret_cast<UMaterialInstance_execSetTextureParameterValue_Params*>(parameters);
 	if (!params) return;
 
 	std::string paramName = params->ParameterName.ToString();
-	LOG("=============================================");
-	LOG("caller full name: {}", mi->GetFullName());
-	LOG("ParameterName: {}", paramName);
+
+	//LOG("=============================================");
+	//LOG("caller full name: {}", mi->GetFullName());
+	//LOG("ParameterName: {}", paramName);
 	
 	UTexture* tex = params->Value;
 	if (!tex) {
@@ -211,6 +202,16 @@ void CustomBallOnline::OnSetTexParamValue(ActorWrapper caller, void* parameters,
 
 		// save texture
 		UTexture2DDynamic* dynamicTex = reinterpret_cast<UTexture2DDynamic*>(tex);
+		
+		// cleanup old texture before saving new one
+		if (Textures.savedTextures.find(texName) != Textures.savedTextures.end())
+		{
+			if (Textures.savedTextures[texName].find(paramName) != Textures.savedTextures[texName].end())
+			{
+				Instances.MarkForDestroy(Textures.savedTextures[texName][paramName]);
+			}
+		}
+
 		Instances.MarkInvincible(dynamicTex);
 		Textures.savedTextures[texName][paramName] = dynamicTex; // savedACTextures["Razer"]["Diffuse"] = texture
 
