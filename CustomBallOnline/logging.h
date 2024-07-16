@@ -8,7 +8,7 @@
 #include "bakkesmod/wrappers/cvarmanagerwrapper.h"
 
 extern std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-constexpr bool DEBUG_LOG = false;
+constexpr bool DEBUG_LOG = true;
 
 
 struct FormatString
@@ -51,16 +51,28 @@ struct FormatWstring
 };
 
 
+//template <typename... Args>
+//void LOG(std::string_view format_str, Args&&... args)
+//{
+//	_globalCvarManager->log(std::vformat(format_str, std::make_format_args(std::forward<Args>(args)...)));
+//}
+
 template <typename... Args>
 void LOG(std::string_view format_str, Args&&... args)
 {
-	_globalCvarManager->log(std::vformat(format_str, std::make_format_args(std::forward<Args>(args)...)));
+	_globalCvarManager->log(std::vformat(format_str, std::make_format_args(args...)));
 }
+
+//template <typename... Args>
+//void LOG(std::wstring_view format_str, Args&&... args)
+//{
+//	_globalCvarManager->log(std::vformat(format_str, std::make_wformat_args(std::forward<Args>(args)...)));
+//}
 
 template <typename... Args>
 void LOG(std::wstring_view format_str, Args&&... args)
 {
-	_globalCvarManager->log(std::vformat(format_str, std::make_wformat_args(std::forward<Args>(args)...)));
+	_globalCvarManager->log(std::vformat(format_str, std::make_wformat_args(args...)));
 }
 
 
@@ -70,7 +82,7 @@ void DEBUGLOG(std::string_view format_str, Args&&... args)
 	if constexpr (DEBUG_LOG)
 	{
 		// just like regular logging
-		_globalCvarManager->log(std::vformat(format_str, std::make_format_args(std::forward<Args>(args)...)));
+		_globalCvarManager->log(std::vformat(format_str, std::make_format_args(args...)));
 	}
 }
 
@@ -80,6 +92,25 @@ void DEBUGLOG(std::wstring_view format_str, Args&&... args)
 	if constexpr (DEBUG_LOG)
 	{
 		// just like regular logging
-		_globalCvarManager->log(std::vformat(format_str, std::make_wformat_args(std::forward<Args>(args)...)));
+		_globalCvarManager->log(std::vformat(format_str, std::make_wformat_args(args...)));
 	}
 }
+
+template <typename T>
+bool nullcheck(T* thing, const std::string& name)
+{
+	if (!thing) {
+		LOG("{} is null", name);
+		return false;
+	}
+
+	return true;
+}
+
+//#define NULLCHECK(thing, name) \
+//    do { \
+//        if (!(thing)) { \
+//            LOG(name + " is null"); \
+//            return; \
+//        } \
+//    } while (0)

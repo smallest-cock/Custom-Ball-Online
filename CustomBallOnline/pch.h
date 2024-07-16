@@ -15,4 +15,17 @@
 #include "IMGUI/imgui_searchablecombo.h"
 #include "IMGUI/imgui_rangeslider.h"
 
+#include <limits.h>
+#include <Windows.h>
+#include <Psapi.h>
+#include <iostream>
+#include <fstream>
+#include <shellapi.h>
+#include <chrono>
+#include <format>
+#include <filesystem>
+
+#include "nlohmann.hpp"
+#include "SDK/SdkHeaders.hpp"
+
 #include "logging.h"

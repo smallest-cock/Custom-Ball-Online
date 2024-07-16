@@ -1,5 +1,7 @@
 # Settings
 
+These settings are deprecated as of v2.0.0, but will remain here just in case someone prefers to use an older version of the plugin...
+
 ## Fast navigation
 ![](./images/fast_navigation.png)
 

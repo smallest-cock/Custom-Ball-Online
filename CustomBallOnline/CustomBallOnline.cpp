@@ -6,156 +6,132 @@ BAKKESMOD_PLUGIN(CustomBallOnline, "Custom Ball Online", plugin_version, PLUGINT
 
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 
-// the playlist IDs which should use the default RL soccar ball ... from this list https://wiki.bakkesplugins.com/code_snippets/playlist_id/
-std::vector<int> CustomBallOnline::acceptablePlaylistIDs = { 1, 2, 3, 4, 6, 10, 11, 13, 16, 18, 19, 22, 28, 34, 41, 50, 52, 55 };
-
-
 
 void CustomBallOnline::onLoad()
 {
 	_globalCvarManager = cvarManager;
 
-	ImGuiIO& io = ImGui::GetIO();
+	// initialize globals
+	Instances.InitGlobals();
+	if (!Instances.CheckGlobals()) return;
 
-	// Enable keyboard navigation
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	// other init
+	Textures.Initialize(gameWrapper->GetDataFolder());
 
-	//// Enable gamepad navigation
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-	//// Enable mouse to follow navigation steps
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
+	// This code snippet needs to exist.. or else the game will crash on a goal replay due to an invalid UMaterialInstance ptr
+	// The code does literally nothing, yet it prevents the whole game from crashing??
+	// Maybe some kind of weird c++/compiler quirk, or the creator of the universe is fucking with me ...
+	// -----------------------------------------------
+	UStaticMeshComponent* idk = nullptr;
+	if (idk) {
+		auto fml = idk->GetMaterial(0);
+	}
+	// -----------------------------------------------
+
+
+
+	// ====================================== Cvars ===========================================
+
+	// bools
+	cvarManager->registerCvar(CvarNames::enabled, "1", "enable plugin", true, true, 0, true, 1);
+	cvarManager->registerCvar(CvarNames::clearUnusedTexturesOnLoading, "1", "clear unused saved textures on loading screens", true, true, 0, true, 1);
+
+
+	// ================================== console commands ====================================
 	
+	cvarManager->registerNotifier(CvarNames::applyTexture, [this](std::vector<std::string> args) {
 
-	bool isEpic = gameWrapper->IsUsingEpicVersion();
-	bool isSteam = gameWrapper->IsUsingSteamVersion();
-	LOG("is on Epic version: {}", isEpic);
-	LOG("is on Steam version: {}", isSteam);
-
-
-	// Steam users dont have the 'Epic Avatar' dropdown at the top of the cosmetics tab like Epic users, so they need only 2 'down' steps to highlight 
-	// the ball texture dropdown
-	std::string navigationSteps = isEpic ? "enter makeSureLoaded up up right activate down down down down enter enter exit" : "enter makeSureLoaded up up right activate down down enter enter exit";
-
-
-	// command cvars
-	cvarManager->registerCvar("startCommand", "plugin reload acplugin; sleep 200; openmenu ac_main", "command to run before auto menu navigation", true);
-	cvarManager->registerCvar("exitCommand", "closemenu ac_main", "command to run after auto menu navigation finished", true);
-
-	// playlists
-	cvarManager->registerCvar("automaticActivationPlaylists", "1 2 3 4 6 10 11 13 16 18 19 22 28 34 41 50 52 55", "playlists to automatically enable ball texture", true);
-
-	// step cvars
-	cvarManager->registerCvar("startSequenceSteps", "focus up enter down down", "start sequence steps", true);
-	cvarManager->registerCvar("navigationSteps", navigationSteps, "menu navigation steps", true);
-	
-	// delay cvars
-	cvarManager->registerCvar("startNavDelay", "1", "start delay", true, true, .2, true, 100);
-	cvarManager->registerCvar("autoNavDelay", "2", "navigation delay", true, true, 1, true, 500);
-	cvarManager->registerCvar("delayDuration", "0.2", "duration of a makeSureLoaded step", true, true, 0, true, 5);
-	cvarManager->registerCvar("delayAfterJoinMatch", "0", "how long to wait after joining a match to run", true, true, 0, true, 5);
-
-	// bool cvars
-	cvarManager->registerCvar("autoNavActive", "0", "flag for checking if automatic menu navigation is active", true, true, 0, true, 1);
-	cvarManager->registerCvar("runOnMatchStart", "1", "automatically run enableBallTexture at the beginning of a match", true, true, 0, true, 1);
-	cvarManager->registerCvar("enableFastMode", "1", "enable fast navigation mode", true, true, 0, true, 1);
-
-	// retries
-	cvarManager->registerCvar("startSequenceRetryLimit", "4", "start sequence retry limit", true, true, 0, true, 50);
-	cvarManager->registerCvar("startSequenceRetryThreshold", "4", "start sequence retry cutoff", true, true, 1, true, 50);
-	cvarManager->registerCvar("navStepRetryLimit", "10", "navigation step retry limit", true, true, 0, true, 100);
-
-
-
-	// register console commands
-	cvarManager->registerNotifier("enableBallTexture", [this](std::vector<std::string> args) {
-		enableBallTexture();
-	}, "", PERMISSION_ALL);
-	
-	cvarManager->registerNotifier("currentPlaylistInfo", [this](std::vector<std::string> args) {
-		bool playlistIsValid = checkPlaylist();
-		LOG("++ current playlist should have default RL soccar ball: {}", playlistIsValid);
-
-	}, "", PERMISSION_ALL);
-
-	cvarManager->registerNotifier("startNav", [this](std::vector<std::string> args) {
-		startNav();
-	}, "", PERMISSION_ALL);
-
-	cvarManager->registerNotifier("navInput", [this](std::vector<std::string> args) {
-		navInput(args[1]);
-	}, "", PERMISSION_ALL);
-	
-	cvarManager->registerNotifier("customBallOnline_testSomething", [this](std::vector<std::string> args) {
-
-		// testing grounds ...
-
-	}, "", PERMISSION_ALL);
-	
-
-	// activate a specific widget based on its ImGuiID
-	cvarManager->registerNotifier("activateID", [this](std::vector<std::string> args) {
-
-		LOG("this is the content of args[1]: {}", args[1]);
-
-		gameWrapper->SetTimeout([this, args](...){
-
-			unsigned int idNum = std::stoll(args[1]);
-			ImGuiID itemId = ImGuiID(idNum);
-
-			ImGui::ActivateItem(itemId);
-
-			LOG("~~ activation attempted on ID {} ~~", itemId);
-
-			}, 3);
-	}, "", PERMISSION_ALL);
-	
-	// print the ImGuiID for highlighted widgets, for 30s
-	cvarManager->registerNotifier("getFocusID", [this](std::vector<std::string> args) {
-
-		for (int i = 1; i < 30; i++) {
-
-			gameWrapper->SetTimeout([this](...) {
-				ImGuiID focus = ImGui::GetFocusID();
-
-				LOG("focus ID: {}", focus);
-				LOG("IsAnyItemFocused() : {}", ImGui::IsAnyItemFocused());
-				}, i);
+		auto selectedTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
+		if (!selectedTextureCvar) {
+			LOG("[ERROR] '{}' Cvar doesnt exist!", CvarNames::acSelectedTexture);
+			return;
 		}
 
+		Textures.LoadTexture(selectedTextureCvar.getStringValue());
+
 	}, "", PERMISSION_ALL);
 	
-	// test run with a specific navigation delay value
-	cvarManager->registerNotifier("customBallOnline_test", [this](std::vector<std::string> args) {
+	
+	cvarManager->registerNotifier(CvarNames::clearSavedTextures, [this](std::vector<std::string> args) {
 
-		// if nav delay and sleep time are specified
-		if (args.size() == 3) {
-			CVarWrapper navDelayCvar = cvarManager->getCvar("autoNavDelay");
+		auto enabledCvar = cvarManager->getCvar(CvarNames::enabled);
+		if (!enabledCvar.getBoolValue()) return;
 
-			if (!navDelayCvar) { return; }
+		Textures.ClearSavedTextures();
 
-			int newDelay = std::stoi(args[1]);
+	}, "", PERMISSION_ALL);
+	
+	
+	cvarManager->registerNotifier(CvarNames::clearUnusedSavedTextures, [this](std::vector<std::string> args) {
 
-			navDelayCvar.setValue(newDelay);
+		auto enabledCvar = cvarManager->getCvar(CvarNames::enabled);
+		if (!enabledCvar.getBoolValue()) return;
 
-			float waitBeforeRunning = std::stof(args[2]);
-
-			std::string command = std::to_string(waitBeforeRunning * 1000);
-
-			cvarManager->executeCommand("plugin reload acplugin; sleep 1000; load_freeplay; sleep " + command + "; enableBallTexture");
+		CVarWrapper selectedACTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
+		if (!selectedACTextureCvar) {
+			LOG("[ERROR] Unable to access cvar: '{}'", CvarNames::acSelectedTexture);
+			return;
 		}
-		else {
-			cvarManager->executeCommand("plugin reload acplugin; sleep 1000; load_freeplay; sleep 5000; enableBallTexture");
-		}
 
+		Textures.ClearUnusedSavedTextures(selectedACTextureCvar.getStringValue());
 
 	}, "", PERMISSION_ALL);
 
 
-	// hooks
-	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccar_TA.OnAllTeamsCreated", [this](std::string eventName) {
-		onJoinedMatch();
+	// ======================================= hooks ==========================================
+	
+	gameWrapper->HookEventPost(Events::ballAdded, std::bind(&CustomBallOnline::OnBallAdded, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::replayBegin, std::bind(&CustomBallOnline::OnReplayBegin, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::replayEnd, std::bind(&CustomBallOnline::OnReplayEnd, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::replaySkipped, std::bind(&CustomBallOnline::OnHandleReplaySkip, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::teamChanged, std::bind(&CustomBallOnline::OnChangeTeam, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::ballFadeIn, std::bind(&CustomBallOnline::OnStartBallFadeIn, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::botReplaced, std::bind(&CustomBallOnline::OnReplaceBot, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::countdownBegin, std::bind(&CustomBallOnline::OnCountdownBegin, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::enterGameplayView, std::bind(&CustomBallOnline::OnEnterStartState, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::loadingScreen, std::bind(&CustomBallOnline::OnLoadingScreen, this, std::placeholders::_1));
+
+	//gameWrapper->HookEventPost("Function OnlineGameJoinGame_X.WaitForAllPlayers.EndState", std::bind(&CustomBallOnline::OnAllPlayersJoined, this, std::placeholders::_1));
+	//gameWrapper->HookEventPost("Function TAGame.GFxHUD_TA.UpdatePendingAddMessagePlayers", std::bind(&CustomBallOnline::OnAllPlayersJoined, this, std::placeholders::_1));
+	//gameWrapper->HookEventPost("Function TAGame.GFxHUD_TA.OnAllTeamsCreated", std::bind(&CustomBallOnline::OnAllPlayersJoined, this, std::placeholders::_1));
+
+
+	// ----------------- hooks with caller ----------------- 
+
+	gameWrapper->HookEventWithCallerPost<ActorWrapper>(Events::mipUpdatedFromPNG,
+		std::bind(&CustomBallOnline::OnUpdateMipFromPNG, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	
+	gameWrapper->HookEventWithCallerPost<ActorWrapper>(Events::textureInitialized,
+		std::bind(&CustomBallOnline::OnTextureInit, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	
+	gameWrapper->HookEventWithCallerPost<ActorWrapper>(Events::textureParamValueSet,
+		std::bind(&CustomBallOnline::OnSetTexParamValue, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	
+
+	// -------------- "hook" for AC selectedtexture cvar --------------
+
+	CVarWrapper selectedACTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
+	if (!selectedACTextureCvar) {
+		LOG("[ERROR] Unable to access cvar: '{}'", CvarNames::acSelectedTexture);
+		return;
+	}
+
+	selectedACTextureCvar.addOnValueChanged([this](std::string cvarName, CVarWrapper newCvar) {
+	
+		if (gameWrapper->IsInOnlineGame() || gameWrapper->IsInGame() || gameWrapper->IsInReplay())
+		{
+			std::string newTexName = newCvar.getStringValue();
+
+			gameWrapper->SetTimeout([this, newTexName](GameWrapper* gw) {
+				
+				Textures.LoadTexture(newTexName);
+
+			}, .1);	// wait 0.1s before applying custom texture, so AC can finish applying default ball texture first
+		}		
 	});
+
+	// ========================================================================================
 
 
 	LOG("Custom Ball Online loaded :)");
