@@ -5,7 +5,8 @@ Enables custom ball textures in online matches
 
 >[!IMPORTANT]
 >~~Must be using an [older version of AlphaConsole](./AC%20stuff/AlphaConsole.md) for custom ball textures to work in online matches!~~
-This plugin now works with the latest version of [AlphaConsole](https://bakkesplugins.com/plugins/view/108) 😄
+>
+>This plugin now works with the latest version of [AlphaConsole](https://bakkesplugins.com/plugins/view/108) 😄
 
 <br>
 
