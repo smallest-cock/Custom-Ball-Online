@@ -238,7 +238,7 @@ void CustomBallOnline::OnSetTexParamValue(ActorWrapper caller, void* parameters,
 // on new ball texture selected in AC (when 'acplugin_balltexture_selectedtexture' changes)
 void CustomBallOnline::OnACTexChanged(std::string cvarName, CVarWrapper newCvar)
 {
-	if (gameWrapper->IsInOnlineGame() || gameWrapper->IsInGame() || gameWrapper->IsInReplay())
+	if (!gameWrapper->IsInFreeplay() && (gameWrapper->IsInOnlineGame() || gameWrapper->IsInReplay()))
 	{
 		std::string newTexName = newCvar.getStringValue();
 
@@ -247,7 +247,7 @@ void CustomBallOnline::OnACTexChanged(std::string cvarName, CVarWrapper newCvar)
 			LOG("Applying new '{}' texture selected in AlphaConsole...", newTexName);
 			Textures.LoadTexture(newTexName);
 
-			}, .1);	// wait 0.1s before applying custom texture, so AC can finish applying default ball texture first
+		}, .1);	//	wait 0.1s before applying custom texture, so AC can finish applying default ball texture first
 	}
 	else {
 		LOG("Didn't apply current AlphaConsole ball texture bc not in an online game");
