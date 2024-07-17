@@ -48,6 +48,9 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	//Boilerplate
 	void onLoad() override;
 
+	// bools
+	bool acHooked = false;
+
 	// hook callbacks
 	void OnBallAdded(std::string eventName);
 	void OnAllPlayersJoined(std::string eventName);
@@ -63,6 +66,9 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	void OnUpdateMipFromPNG(ActorWrapper caller, void* params, std::string eventName);
 	void OnTextureInit(ActorWrapper caller, void* params, std::string eventName);
 	void OnSetTexParamValue(ActorWrapper caller, void* params, std::string eventName);
+
+	// hook for 'acplugin_balltexture_selectedtexture' Cvar
+	void OnACTexChanged(std::string cvarName, CVarWrapper newCvar);
 
 public:
 	void RenderSettings() override;

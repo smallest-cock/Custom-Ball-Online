@@ -109,27 +109,21 @@ void CustomBallOnline::onLoad()
 		std::bind(&CustomBallOnline::OnSetTexParamValue, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	
 
-	// -------------- "hook" for AC selectedtexture cvar --------------
+	// -------------- "hook" for 'acplugin_balltexture_selectedtexture' Cvar --------------
 
-	CVarWrapper selectedACTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
-	if (!selectedACTextureCvar) {
-		LOG("[ERROR] Unable to access cvar: '{}'", CvarNames::acSelectedTexture);
-		return;
-	}
+	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 
-	selectedACTextureCvar.addOnValueChanged([this](std::string cvarName, CVarWrapper newCvar) {
-	
-		if (gameWrapper->IsInOnlineGame() || gameWrapper->IsInGame() || gameWrapper->IsInReplay())
-		{
-			std::string newTexName = newCvar.getStringValue();
+		CVarWrapper selectedACTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
+		if (!selectedACTextureCvar) {
+			LOG("[ERROR] Unable to access cvar: '{}'", CvarNames::acSelectedTexture);
+			return;
+		}
 
-			gameWrapper->SetTimeout([this, newTexName](GameWrapper* gw) {
-				
-				Textures.LoadTexture(newTexName);
+		selectedACTextureCvar.addOnValueChanged(std::bind(&CustomBallOnline::OnACTexChanged, this, std::placeholders::_1, std::placeholders::_2));
+		LOG("[SUCCESS] Hooked '{}' Cvar", CvarNames::acSelectedTexture);
+		acHooked = true;
 
-			}, .1);	// wait 0.1s before applying custom texture, so AC can finish applying default ball texture first
-		}		
-	});
+	}, 3);	// wait 3s after onLoad before attempting to hook 'acplugin_balltexture_selectedtexture' (to make sure it exists)
 
 	// ========================================================================================
 

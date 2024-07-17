@@ -122,6 +122,20 @@ void CustomBallOnline::OnLoadingScreen(std::string eventName)
 	if (!clearUnusedOnLoadingCvar.getBoolValue()) return;
 
 	cvarManager->executeCommand(CvarNames::clearUnusedSavedTextures);
+
+
+	// ----------- hook 'acplugin_balltexture_selectedtexture' Cvar if not already hooked -----------
+	if (!acHooked) {
+		CVarWrapper selectedACTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
+		if (!selectedACTextureCvar) {
+			LOG("[ERROR] Unable to access cvar: '{}'", CvarNames::acSelectedTexture);
+			return;
+		}
+
+		selectedACTextureCvar.addOnValueChanged(std::bind(&CustomBallOnline::OnACTexChanged, this, std::placeholders::_1, std::placeholders::_2));
+		LOG("[SUCCESS] Hooked '{}' Cvar", CvarNames::acSelectedTexture);
+		acHooked = true;
+	}
 }
 
 
@@ -220,3 +234,22 @@ void CustomBallOnline::OnSetTexParamValue(ActorWrapper caller, void* parameters,
 	}
 }
 
+
+// on new ball texture selected in AC (when 'acplugin_balltexture_selectedtexture' changes)
+void CustomBallOnline::OnACTexChanged(std::string cvarName, CVarWrapper newCvar)
+{
+	if (gameWrapper->IsInOnlineGame() || gameWrapper->IsInGame() || gameWrapper->IsInReplay())
+	{
+		std::string newTexName = newCvar.getStringValue();
+
+		gameWrapper->SetTimeout([this, newTexName](GameWrapper* gw) {
+
+			LOG("Applying new '{}' texture selected in AlphaConsole...", newTexName);
+			Textures.LoadTexture(newTexName);
+
+			}, .1);	// wait 0.1s before applying custom texture, so AC can finish applying default ball texture first
+	}
+	else {
+		LOG("Didn't apply current AlphaConsole ball texture bc not in an online game");
+	}
+}
