@@ -21,9 +21,9 @@ Enables custom ball textures in online matches
 <br>
 
 >[!TIP]
->Bind the `cbo_applyballtexture` command to manually apply the ball texture whenever you want
+>Bind the `cbo_apply_ball_texture` command to manually apply the ball texture whenever you want
 >
->(like, in case the texture wasn't automatically applied for some reason)
+>(like, in case the texture wasn't applied automatically for some reason)
 
 <br>
 

@@ -9,31 +9,37 @@
 //"Function TAGame.FXActor_Ball_TA.StartBallFadeIn"
 
 
-//"Function TAGame.GFxHUD_TA.UpdatePendingAddMessagePlayers"
-//"Function TAGame.GFxHUD_TA.OnAllTeamsCreated"
-void CustomBallOnline::OnAllPlayersJoined(std::string eventName)
+void CustomBallOnline::Event_LoadingScreenEnd(std::string eventName)
 {
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+
 	LOG("[HOOK]: {}", eventName);
+}
+
+
+void CustomBallOnline::Event_AllPlayersJoined(std::string eventName)
+{
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+
+	LOG("[HOOK]: {}", eventName);
+}
+
+
+void CustomBallOnline::Event_CountdownBegin(std::string eventName)
+{
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+
+	LOG("[HOOK]: {}", eventName);
+}
+
+
+void CustomBallOnline::Event_BallAdded(std::string eventName)
+{
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
 	
-	// ...
-}
-
-
-//"Function GameEvent_TA.Countdown.BeginState"
-void CustomBallOnline::OnCountdownBegin(std::string eventName)
-{
 	LOG("[HOOK]: {}", eventName);
 
-	// ...
-}
-
-
-//"Function TAGame.GameObserver_TA.HandleBallAdded"
-void CustomBallOnline::OnBallAdded(std::string eventName)
-{
-	LOG("[HOOK]: {}", eventName);
-
-	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		cvarManager->executeCommand(CvarNames::applyTexture);
@@ -41,12 +47,13 @@ void CustomBallOnline::OnBallAdded(std::string eventName)
 }
 
 
-//"Function GameEvent_Soccar_TA.ReplayPlayback.BeginState"
-void CustomBallOnline::OnReplayBegin(std::string eventName)
+void CustomBallOnline::Event_ReplayBegin(std::string eventName)
 {
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
+
 	LOG("[HOOK]: {}", eventName);
 
-	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		cvarManager->executeCommand(CvarNames::applyTexture);
@@ -54,12 +61,12 @@ void CustomBallOnline::OnReplayBegin(std::string eventName)
 }
 
 
-//"Function GameEvent_Soccar_TA.ReplayPlayback.EndState"
-void CustomBallOnline::OnReplayEnd(std::string eventName)
+void CustomBallOnline::Event_ReplayEnd(std::string eventName)
 {
-	LOG("[HOOK]: {}", eventName);
-
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
 	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
+
+	LOG("[HOOK]: {}", eventName);
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		cvarManager->executeCommand(CvarNames::applyTexture);
@@ -67,34 +74,34 @@ void CustomBallOnline::OnReplayEnd(std::string eventName)
 }
 
 
-//"Function TAGame.GameInfo_Replay_TA.HandleReplayTimeSkip"
-void CustomBallOnline::OnHandleReplaySkip(std::string eventName)
+void CustomBallOnline::Event_ReplaySkipped(std::string eventName)
 {
-	LOG("[HOOK]: {}", eventName);
-
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
 	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
+
+	LOG("[HOOK]: {}", eventName);
 
 	cvarManager->executeCommand(CvarNames::applyTexture);
 }
 
 
-//"Function TAGame.GFxData_LocalPlayer_TA.ChangeTeam"
-void CustomBallOnline::OnChangeTeam(std::string eventName)
+void CustomBallOnline::Event_ChangeTeam(std::string eventName)
 {
-	LOG("[HOOK]: {}", eventName);
-
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
 	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
+
+	LOG("[HOOK]: {}", eventName);
 
 	cvarManager->executeCommand(CvarNames::applyTexture);
 }
 
 
-//"Function TAGame.FXActor_Ball_TA.StartBallFadeIn"
-void CustomBallOnline::OnStartBallFadeIn(std::string eventName)
+void CustomBallOnline::Event_StartBallFadeIn(std::string eventName)
 {
-	LOG("[HOOK]: {}", eventName);
-
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
 	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
+
+	LOG("[HOOK]: {}", eventName);
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		cvarManager->executeCommand(CvarNames::applyTexture);
@@ -102,20 +109,21 @@ void CustomBallOnline::OnStartBallFadeIn(std::string eventName)
 }
 
 
-//"Function TAGame.GFxHUD_TA.HandleReplaceBot"
-void CustomBallOnline::OnReplaceBot(std::string eventName)
+void CustomBallOnline::Event_ReplaceBot(std::string eventName)
 {
-	LOG("[HOOK]: {}", eventName);
-
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
 	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
+
+	LOG("[HOOK]: {}", eventName);
 
 	cvarManager->executeCommand(CvarNames::applyTexture);
 }
 
 
-// "Function ProjectX.EngineShare_X.EventPreLoadMap"
-void CustomBallOnline::OnLoadingScreen(std::string eventName)
+void CustomBallOnline::Event_LoadingScreenStart(std::string eventName)
 {
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+
 	LOG("[HOOK]: {}", eventName);
 
 	auto clearUnusedOnLoadingCvar = cvarManager->getCvar(CvarNames::clearUnusedTexturesOnLoading);
@@ -132,16 +140,17 @@ void CustomBallOnline::OnLoadingScreen(std::string eventName)
 			return;
 		}
 
-		selectedACTextureCvar.addOnValueChanged(std::bind(&CustomBallOnline::OnACTexChanged, this, std::placeholders::_1, std::placeholders::_2));
+		selectedACTextureCvar.addOnValueChanged(std::bind(&CustomBallOnline::OnACBallTextureChanged, this, std::placeholders::_1, std::placeholders::_2));
 		LOG("[SUCCESS] Hooked '{}' Cvar", CvarNames::acSelectedTexture);
 		acHooked = true;
 	}
 }
 
 
-//"Function Engine.PlayerController.EnterStartState"
-void CustomBallOnline::OnEnterStartState(std::string eventName)
+void CustomBallOnline::Event_EnterStartState(std::string eventName)
 {
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+
 	LOG("[HOOK]: {}", eventName);
 
 	if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay()) return;
@@ -152,8 +161,7 @@ void CustomBallOnline::OnEnterStartState(std::string eventName)
 }
 
 
-//"Function Engine.Texture2DDynamic.UpdateMipFromPNG"
-void CustomBallOnline::OnUpdateMipFromPNG(ActorWrapper caller, void* params, std::string eventName)
+void CustomBallOnline::Event_UpdateMipFromPNG(ActorWrapper caller, void* params, std::string eventName)
 {
 	return;
 
@@ -165,27 +173,21 @@ void CustomBallOnline::OnUpdateMipFromPNG(ActorWrapper caller, void* params, std
 }
 
 
-//"Function Engine.Texture2DDynamic.Init"
-void CustomBallOnline::OnTextureInit(ActorWrapper caller, void* params, std::string eventName)
+void CustomBallOnline::Event_TextureInit(ActorWrapper caller, void* params, std::string eventName)
 {
-	//LOG("[HOOK]: {}", eventName); 
+	return;
 
-	UTexture2DDynamic* tex = reinterpret_cast<UTexture2DDynamic*>(caller.memory_address);
-	if (!tex) return;
+	//UTexture2DDynamic* tex = reinterpret_cast<UTexture2DDynamic*>(caller.memory_address);
+	//if (!tex) return;
 
-	UTexture2DDynamic_execInit_Params* parameters = reinterpret_cast<UTexture2DDynamic_execInit_Params*>(params);
-	if (!params) return;
-
-	//LOG("=============================================");
-	//LOG("pixel format : {}", parameters->InFormat);
-	//LOG("size: X: {} - Y: {}", parameters->InSizeX, parameters->InSizeY);
+	//UTexture2DDynamic_execInit_Params* parameters = reinterpret_cast<UTexture2DDynamic_execInit_Params*>(params);
+	//if (!params) return;
 }
 
 
-//"Function Engine.MaterialInstance.SetTextureParameterValue"
-void CustomBallOnline::OnSetTexParamValue(ActorWrapper caller, void* parameters, std::string eventName)
+void CustomBallOnline::Event_SetTextureParamValue(ActorWrapper caller, void* parameters, std::string eventName)
 {
-	//LOG("[HOOK]: {}", eventName);
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
 
 	UMaterialInstance* mi = reinterpret_cast<UMaterialInstance*>(caller.memory_address);
 	if (!mi) return;
@@ -195,10 +197,6 @@ void CustomBallOnline::OnSetTexParamValue(ActorWrapper caller, void* parameters,
 
 	std::string paramName = params->ParameterName.ToString();
 
-	//LOG("=============================================");
-	//LOG("caller full name: {}", mi->GetFullName());
-	//LOG("ParameterName: {}", paramName);
-	
 	UTexture* tex = params->Value;
 	if (!tex) {
 		LOG("UTexture* param is null!");
@@ -235,9 +233,10 @@ void CustomBallOnline::OnSetTexParamValue(ActorWrapper caller, void* parameters,
 }
 
 
-// on new ball texture selected in AC (when 'acplugin_balltexture_selectedtexture' changes)
-void CustomBallOnline::OnACTexChanged(std::string cvarName, CVarWrapper newCvar)
+void CustomBallOnline::OnACBallTextureChanged(std::string cvarName, CVarWrapper newCvar)
 {
+	if (!cvarManager->getCvar(CvarNames::enabled).getBoolValue()) return;
+
 	if (!gameWrapper->IsInFreeplay() && (gameWrapper->IsInOnlineGame() || gameWrapper->IsInReplay()))
 	{
 		std::string newTexName = newCvar.getStringValue();

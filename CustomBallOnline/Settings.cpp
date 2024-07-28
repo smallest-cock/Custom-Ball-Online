@@ -1,119 +1,95 @@
 #include "pch.h"
 #include "CustomBallOnline.h"
+#include "GuiUtils.hpp"
 
 
 void CustomBallOnline::RenderSettings()
 {
-    // Cvars
+    // cvars
     auto enabledCvar = cvarManager->getCvar(CvarNames::enabled);
     auto clearUnusedOnLoadingCvar = cvarManager->getCvar(CvarNames::clearUnusedTexturesOnLoading);
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    ImGui::TextColored(ImVec4(1, 0, 1, 1), "Plugin made by SSLow");
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    ImGui::Text(pretty_plugin_version);
-    ImGui::Separator();
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    ImGui::TextColored(ImVec4(1, 1, 0, 1), "If you have questions/issues, feel free to ask in the server ");
-    ImGui::SameLine();
-    ImGui::PushItemWidth(150);
-    std::string txtToBeCopied = "discord.gg/tHZFsMsvDU";
-    ImGui::InputText("", &txtToBeCopied, ImGuiInputTextFlags_ReadOnly);
-    ImGui::PopItemWidth();
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
+    if (!enabledCvar || !clearUnusedOnLoadingCvar) return;
 
 
-    bool enabled = enabledCvar.getBoolValue();
-    if (ImGui::Checkbox("Enabled", &enabled)) {
-        enabledCvar.setValue(enabled);
-    }
+	// ---------------- calculate ImGui::BeginChild sizes ------------------
 
-    if (!enabled) return;   // dont render code below if plugin disabled
+	ImVec2 availableSpace = ImGui::GetContentRegionAvail();
+	availableSpace.y -= 4;		// act as if availableSpace height is 4px smaller, bc for some reason availableSpace height is cap (prevents scroll bars)
+	float headerHeight = 80.0f;
+	float footerHeight = 35.0f;
+	float contentHeight = availableSpace.y - footerHeight;
 
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
+	ImVec2 contentSize = ImVec2(0, contentHeight);
+	ImVec2 footerSize = ImVec2(0, footerHeight);
+	ImVec2 headerSize = ImVec2(0, headerHeight);
 
-    bool clearUnusedOnLoading = clearUnusedOnLoadingCvar.getBoolValue();
-    if (ImGui::Checkbox("clear inactive textures on loading screen", &clearUnusedOnLoading)) {
-        clearUnusedOnLoadingCvar.setValue(clearUnusedOnLoading);
-    }
-    if (ImGui::IsItemHovered()) {
-		ImGui::SetTooltip("can save memory, but may cause a stutter when switching textures in-game");
-	}
+	// ----------------------------------------------------------------------
 
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
 
-    if (ImGui::Button("clear all saved textures")) {
-        gameWrapper->Execute([this](GameWrapper* gw) {
-            cvarManager->executeCommand(CvarNames::clearSavedTextures);
-        });
-    }
+    if (ImGui::BeginChild("Content##cbo", contentSize))
+    {
+		GUI::SettingsHeader(headerSize, false);
     
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    if (ImGui::Button("clear unused saved textures")) {
-        gameWrapper->Execute([this](GameWrapper* gw) {
-            cvarManager->executeCommand(CvarNames::clearUnusedSavedTextures);
-        });
-    }
-	if (!Textures.savedTextures.empty()) {
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("can save memory if you're not using every single saved texture");
+		bool enabled = enabledCvar.getBoolValue();
+		if (ImGui::Checkbox("Enabled", &enabled)) {
+			enabledCvar.setValue(enabled);
 		}
-	}
 
-    ImGui::Spacing();
-    ImGui::Spacing();
+		if (enabled)
+		{ 
+			GUI::Spacing(2);
 
-    std::string numSaved = "saved textures: " + std::to_string(Textures.savedTextures.size());
-    ImGui::Text(numSaved.c_str());
-
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    // list of saved texture names
-    if (!Textures.savedTextures.empty()) {
-        if (ImGui::CollapsingHeader("saved", ImGuiTreeNodeFlags_None))
-        {
-            ImGui::Spacing();
-            ImGui::Spacing();
-
-			for (const auto& [textureName, texMap] : Textures.savedTextures) {
-				std::string label = "*\t" + textureName;
-				ImGui::Text(label.c_str());
-
-				ImGui::Spacing();
+			bool clearUnusedOnLoading = clearUnusedOnLoadingCvar.getBoolValue();
+			if (ImGui::Checkbox("Clear inactive textures on loading screen", &clearUnusedOnLoading)) {
+				clearUnusedOnLoadingCvar.setValue(clearUnusedOnLoading);
 			}
-        }
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("can save memory");
+			}
+
+			GUI::Spacing(8);
+
+			if (ImGui::Button("Clear all saved textures")) {
+				gameWrapper->Execute([this](GameWrapper* gw) {
+					cvarManager->executeCommand(CvarNames::clearSavedTextures);
+					});
+			}
+
+			GUI::Spacing(2);
+
+			if (ImGui::Button("Clear unused saved textures")) {
+				gameWrapper->Execute([this](GameWrapper* gw) {
+					cvarManager->executeCommand(CvarNames::clearUnusedSavedTextures);
+					});
+			}
+			if (!Textures.savedTextures.empty()) {
+				// can do something here... like set a tooltip only if there are saved textures
+			}
+
+			GUI::Spacing(2);
+
+			std::string numSaved = "Saved textures: " + std::to_string(Textures.savedTextures.size());
+			ImGui::Text(numSaved.c_str());
+
+			GUI::Spacing(4);
+
+			// list of saved texture names
+			if (!Textures.savedTextures.empty()) {
+				if (ImGui::CollapsingHeader("saved", ImGuiTreeNodeFlags_None))
+				{
+					GUI::Spacing(2);
+
+					for (const auto& [textureName, texMap] : Textures.savedTextures) {
+						std::string label = "*\t" + textureName;
+						ImGui::Text(label.c_str());
+
+						ImGui::Spacing();
+					}
+				}
+			}
+		}
     }
+	ImGui::EndChild();
+
+    GUI::SettingsFooter(footerSize, availableSpace.x, false);
 }

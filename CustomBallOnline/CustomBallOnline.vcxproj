@@ -91,6 +91,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Commands.cpp" />
     <ClCompile Include="Components\Components\Instances.cpp" />
     <ClCompile Include="Components\Components\Textures.cpp" />
     <ClCompile Include="Components\Components\Utils.cpp" />
@@ -131,6 +132,9 @@
     <ClInclude Include="Components\Components\Textures.hpp" />
     <ClInclude Include="Components\Components\Utils.hpp" />
     <ClInclude Include="Components\Includes.hpp" />
+    <ClInclude Include="CvarNames.hpp" />
+    <ClInclude Include="Events.hpp" />
+    <ClInclude Include="GuiUtils.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imguivariouscontrols.h" />

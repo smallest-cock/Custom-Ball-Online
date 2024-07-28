@@ -21,11 +21,13 @@
 #include <iostream>
 #include <fstream>
 #include <shellapi.h>
-#include <chrono>
-#include <format>
-#include <filesystem>
 
 #include "nlohmann.hpp"
 #include "SDK/SdkHeaders.hpp"
 
 #include "logging.h"
+
+#pragma comment(lib, "Shlwapi.lib")
+
+namespace fs = std::filesystem;
+using json = nlohmann::json;
