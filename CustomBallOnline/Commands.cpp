@@ -3,56 +3,43 @@
 
 
 
-void CustomBallOnline::applyTexture(std::vector<std::string> args)
+void CustomBallOnline::cmd_applyTexture(std::vector<std::string> args)
 {
-	auto selectedTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
-	if (!selectedTextureCvar) {
-		LOG("[ERROR] '{}' Cvar doesnt exist!", CvarNames::acSelectedTexture);
+	auto acSelectedTexture_cvar = cvarManager->getCvar(Cvars::acSelectedTexture);
+	if (!acSelectedTexture_cvar) {
+		LOG("[ERROR] Unable to access cvar: '{}'", Cvars::acSelectedTexture);
 		return;
 	}
 
-	Textures.LoadTexture(selectedTextureCvar.getStringValue());
+	Textures.LoadTexture(acSelectedTexture_cvar.getStringValue());
 }
 
 
-void CustomBallOnline::clearSavedTextures(std::vector<std::string> args)
+void CustomBallOnline::cmd_clearSavedTextures(std::vector<std::string> args)
 {
-	auto enabledCvar = cvarManager->getCvar(CvarNames::enabled);
-	if (!enabledCvar.getBoolValue()) return;
+	auto enabled_cvar = GetCvar(Cvars::enabled);
+	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
 
 	Textures.ClearSavedTextures();
 }
 
 
-void CustomBallOnline::clearUnusedSavedTextures(std::vector<std::string> args)
+void CustomBallOnline::cmd_clearUnusedSavedTextures(std::vector<std::string> args)
 {
-	auto enabledCvar = cvarManager->getCvar(CvarNames::enabled);
-	if (!enabledCvar.getBoolValue()) return;
+	auto enabled_cvar = GetCvar(Cvars::enabled);
+	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
 
-	CVarWrapper selectedACTextureCvar = cvarManager->getCvar(CvarNames::acSelectedTexture);
-	if (!selectedACTextureCvar) {
-		LOG("[ERROR] Unable to access cvar: '{}'", CvarNames::acSelectedTexture);
+	auto acSelectedTexture_cvar = cvarManager->getCvar(Cvars::acSelectedTexture);
+	if (!acSelectedTexture_cvar) {
+		LOG("[ERROR] Unable to access cvar: '{}'", Cvars::acSelectedTexture);
 		return;
 	}
 
-	Textures.ClearUnusedSavedTextures(selectedACTextureCvar.getStringValue());
+	Textures.ClearUnusedSavedTextures(acSelectedTexture_cvar.getStringValue());
 }
 
 
-void CustomBallOnline::test(std::vector<std::string> args)
+void CustomBallOnline::cmd_test(std::vector<std::string> args)
 {
-	if (args.size() < 2) return;
-
-	auto cars = Instances.GetAllInstancesOf<ACar_TA>();
-
-	for (auto& car : cars)
-	{
-		if (!car) continue;
-
-		float scale = std::stof(args[1]);
-
-		car->SetCarScale(scale);
-	}
-
-	LOG("did the test thing...");
+	// ...
 }

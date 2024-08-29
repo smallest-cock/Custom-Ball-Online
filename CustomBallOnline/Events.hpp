@@ -18,4 +18,9 @@ namespace Events
 	const std::string UpdateMipFromPNG =			"Function Engine.Texture2DDynamic.UpdateMipFromPNG";
 	const std::string TextureInit =					"Function Engine.Texture2DDynamic.Init";
 	const std::string SetTextureParamValue =		"Function Engine.MaterialInstance.SetTextureParameterValue";
+	const std::string ReplaySkipToFrame =			"Function TAGame.Replay_TA.SkipToFrame";
+	const std::string ReplayEventSpawned =			"Function TAGame.Replay_TA.EventSpawned";
+	const std::string ReplayHandlePostTimeSkip =	"Function TAGame.GFxHUD_Replay_TA.HandlePostTimeSkip";
+	const std::string SetPausedForEndOfReplay =		"Function TAGame.GFxHUD_Replay_TA.SetPausedForEndOfReplay";
+	const std::string ReplicatedGoalScored =		"Function TAGame.GameEvent_Soccar_TA.EventReplicatedGoalScored";
 }

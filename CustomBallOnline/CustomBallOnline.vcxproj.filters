@@ -144,6 +144,12 @@
     <ClCompile Include="Commands.cpp">
       <Filter>Plugin\src</Filter>
     </ClCompile>
+    <ClCompile Include="RegisterCvars.cpp">
+      <Filter>Plugin\src</Filter>
+    </ClCompile>
+    <ClCompile Include="CvarChangedCallbacks.cpp">
+      <Filter>Plugin\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_rangeslider.h">
@@ -314,13 +320,16 @@
     <ClInclude Include="nlohmann.hpp">
       <Filter>Plugin\header</Filter>
     </ClInclude>
-    <ClInclude Include="CvarNames.hpp">
+    <ClInclude Include="Cvars.hpp">
       <Filter>Plugin\header</Filter>
     </ClInclude>
     <ClInclude Include="Events.hpp">
       <Filter>Plugin\header</Filter>
     </ClInclude>
-    <ClInclude Include="GuiUtils.hpp">
+    <ClInclude Include="GuiTools.hpp">
+      <Filter>Plugin\header</Filter>
+    </ClInclude>
+    <ClInclude Include="Macros.hpp">
       <Filter>Plugin\header</Filter>
     </ClInclude>
   </ItemGroup>

@@ -95,7 +95,9 @@
     <ClCompile Include="Components\Components\Instances.cpp" />
     <ClCompile Include="Components\Components\Textures.cpp" />
     <ClCompile Include="Components\Components\Utils.cpp" />
+    <ClCompile Include="CvarChangedCallbacks.cpp" />
     <ClCompile Include="Events.cpp" />
+    <ClCompile Include="RegisterCvars.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imguivariouscontrols.cpp" />
@@ -132,9 +134,9 @@
     <ClInclude Include="Components\Components\Textures.hpp" />
     <ClInclude Include="Components\Components\Utils.hpp" />
     <ClInclude Include="Components\Includes.hpp" />
-    <ClInclude Include="CvarNames.hpp" />
+    <ClInclude Include="Cvars.hpp" />
     <ClInclude Include="Events.hpp" />
-    <ClInclude Include="GuiUtils.hpp" />
+    <ClInclude Include="GuiTools.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imguivariouscontrols.h" />
@@ -150,6 +152,7 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="logging.h" />
+    <ClInclude Include="Macros.hpp" />
     <ClInclude Include="nlohmann.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="GuiBase.h" />

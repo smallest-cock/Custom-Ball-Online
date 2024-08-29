@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "CustomBallOnline.h"
-#include "GuiUtils.hpp"
+#include "GuiTools.hpp"
 
 
 void CustomBallOnline::RenderSettings()
 {
     // cvars
-    auto enabledCvar = cvarManager->getCvar(CvarNames::enabled);
-    auto clearUnusedOnLoadingCvar = cvarManager->getCvar(CvarNames::clearUnusedTexturesOnLoading);
-    if (!enabledCvar || !clearUnusedOnLoadingCvar) return;
+    auto enabled_cvar =							GetCvar(Cvars::enabled);
+    auto clearUnusedTexturesOnLoading_cvar =	GetCvar(Cvars::clearUnusedTexturesOnLoading);
+    if (!enabled_cvar || !clearUnusedTexturesOnLoading_cvar) return;
 
 
 	// ---------------- calculate ImGui::BeginChild sizes ------------------
@@ -28,20 +28,21 @@ void CustomBallOnline::RenderSettings()
 
     if (ImGui::BeginChild("Content##cbo", contentSize))
     {
-		GUI::SettingsHeader(headerSize, false);
+		GUI::SettingsHeader("Header##cbo", pretty_plugin_version, headerSize, false);
     
-		bool enabled = enabledCvar.getBoolValue();
-		if (ImGui::Checkbox("Enabled", &enabled)) {
-			enabledCvar.setValue(enabled);
+		bool enabled = enabled_cvar.getBoolValue();
+		if (ImGui::Checkbox("Enabled", &enabled))
+		{
+			enabled_cvar.setValue(enabled);
 		}
 
 		if (enabled)
 		{ 
 			GUI::Spacing(2);
 
-			bool clearUnusedOnLoading = clearUnusedOnLoadingCvar.getBoolValue();
-			if (ImGui::Checkbox("Clear inactive textures on loading screen", &clearUnusedOnLoading)) {
-				clearUnusedOnLoadingCvar.setValue(clearUnusedOnLoading);
+			bool clearUnusedTexturesOnLoading = clearUnusedTexturesOnLoading_cvar.getBoolValue();
+			if (ImGui::Checkbox("Clear inactive textures on loading screen", &clearUnusedTexturesOnLoading)) {
+				clearUnusedTexturesOnLoading_cvar.setValue(clearUnusedTexturesOnLoading);
 			}
 			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("can save memory");
@@ -49,20 +50,20 @@ void CustomBallOnline::RenderSettings()
 
 			GUI::Spacing(8);
 
-			if (ImGui::Button("Clear all saved textures")) {
-				gameWrapper->Execute([this](GameWrapper* gw) {
-					cvarManager->executeCommand(CvarNames::clearSavedTextures);
-					});
+			if (ImGui::Button("Clear all saved textures"))
+			{
+				GAME_THREAD_EXECUTE(RUN_COMMAND(Cvars::clearSavedTextures));
 			}
 
 			GUI::Spacing(2);
 
-			if (ImGui::Button("Clear unused saved textures")) {
-				gameWrapper->Execute([this](GameWrapper* gw) {
-					cvarManager->executeCommand(CvarNames::clearUnusedSavedTextures);
-					});
+			if (ImGui::Button("Clear unused saved textures"))
+			{
+				GAME_THREAD_EXECUTE(RUN_COMMAND(Cvars::clearUnusedSavedTextures));
 			}
-			if (!Textures.savedTextures.empty()) {
+
+			if (!Textures.savedTextures.empty())
+			{
 				// can do something here... like set a tooltip only if there are saved textures
 			}
 
@@ -74,16 +75,18 @@ void CustomBallOnline::RenderSettings()
 			GUI::Spacing(4);
 
 			// list of saved texture names
-			if (!Textures.savedTextures.empty()) {
+			if (!Textures.savedTextures.empty())
+			{
 				if (ImGui::CollapsingHeader("saved", ImGuiTreeNodeFlags_None))
 				{
 					GUI::Spacing(2);
 
-					for (const auto& [textureName, texMap] : Textures.savedTextures) {
+					for (const auto& [textureName, texMap] : Textures.savedTextures)
+					{
 						std::string label = "*\t" + textureName;
 						ImGui::Text(label.c_str());
 
-						ImGui::Spacing();
+						GUI::Spacing();
 					}
 				}
 			}
@@ -91,5 +94,5 @@ void CustomBallOnline::RenderSettings()
     }
 	ImGui::EndChild();
 
-    GUI::SettingsFooter(footerSize, availableSpace.x, false);
+    GUI::SettingsFooter("Footer##cbo", footerSize, availableSpace.x, false);
 }

@@ -34,9 +34,16 @@ namespace GUI
 	}
 
 
-	void SettingsHeader(const ImVec2& size, bool showBorder = false)
+	void SameLineSpacing(float horizontalSpacingPx)
 	{
-		if (ImGui::BeginChild("Header##cbo", size, showBorder))
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + horizontalSpacingPx);
+	}
+
+
+	void SettingsHeader(const char* id, const char* pluginVersion, const ImVec2& size, bool showBorder = false)
+	{
+		if (ImGui::BeginChild(id, size, showBorder))
 		{
 			Spacing(4);
 
@@ -44,16 +51,16 @@ namespace GUI
 
 			Spacing(3);
 
-			ImGui::Text(pretty_plugin_version);
+			ImGui::Text(pluginVersion);
 			ImGui::Separator();
 		}
 		ImGui::EndChild();
 	}
-	
-	
-	void SettingsFooter(const ImVec2& size, float parentWidth, bool showBorder = false)
+
+
+	void SettingsFooter(const char* id, const ImVec2& size, float parentWidth, bool showBorder = false)
 	{
-		if (ImGui::BeginChild("Footer##cbo", size, showBorder))
+		if (ImGui::BeginChild(id, size, showBorder))
 		{
 			const char* linkText = "Need help? Join the Discord";
 
