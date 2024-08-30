@@ -45,7 +45,7 @@ void CustomBallOnline::onLoad()
 	gameWrapper->HookEventPost(Events::ChangeTeam,					std::bind(&CustomBallOnline::Event_ChangeTeam, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::StartBallFadeIn,				std::bind(&CustomBallOnline::Event_StartBallFadeIn, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::ReplaceBot,					std::bind(&CustomBallOnline::Event_ReplaceBot, this, std::placeholders::_1));
-	//gameWrapper->HookEventPost(Events::CountdownBegin,				std::bind(&CustomBallOnline::Event_CountdownBegin, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::CountdownBegin,				std::bind(&CustomBallOnline::Event_CountdownBegin, this, std::placeholders::_1));
 	//gameWrapper->HookEventPost(Events::EnterStartState,				std::bind(&CustomBallOnline::Event_EnterStartState, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::LoadingScreenStart,			std::bind(&CustomBallOnline::Event_LoadingScreenStart, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::LoadingScreenEnd,			std::bind(&CustomBallOnline::Event_LoadingScreenEnd, this, std::placeholders::_1));
