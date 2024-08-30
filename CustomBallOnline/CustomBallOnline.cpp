@@ -39,14 +39,14 @@ void CustomBallOnline::onLoad()
 	// =================================== HOOKS =====================================
 	
 	gameWrapper->HookEventPost(Events::BallAdded,					std::bind(&CustomBallOnline::Event_BallAdded, this, std::placeholders::_1));
-	gameWrapper->HookEventPost(Events::ReplayBegin,					std::bind(&CustomBallOnline::Event_ReplayBegin, this, std::placeholders::_1));
-	gameWrapper->HookEventPost(Events::ReplayEnd,					std::bind(&CustomBallOnline::Event_ReplayEnd, this, std::placeholders::_1));
-	gameWrapper->HookEventPost(Events::ReplaySkipped,				std::bind(&CustomBallOnline::Event_ReplaySkipped, this, std::placeholders::_1));
+	//gameWrapper->HookEventPost(Events::ReplayBegin,					std::bind(&CustomBallOnline::Event_ReplayBegin, this, std::placeholders::_1));
+	//gameWrapper->HookEventPost(Events::ReplayEnd,					std::bind(&CustomBallOnline::Event_ReplayEnd, this, std::placeholders::_1));
+	//gameWrapper->HookEventPost(Events::ReplaySkipped,				std::bind(&CustomBallOnline::Event_ReplaySkipped, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::ChangeTeam,					std::bind(&CustomBallOnline::Event_ChangeTeam, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::StartBallFadeIn,				std::bind(&CustomBallOnline::Event_StartBallFadeIn, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::ReplaceBot,					std::bind(&CustomBallOnline::Event_ReplaceBot, this, std::placeholders::_1));
-	gameWrapper->HookEventPost(Events::CountdownBegin,				std::bind(&CustomBallOnline::Event_CountdownBegin, this, std::placeholders::_1));
-	gameWrapper->HookEventPost(Events::EnterStartState,				std::bind(&CustomBallOnline::Event_EnterStartState, this, std::placeholders::_1));
+	//gameWrapper->HookEventPost(Events::CountdownBegin,				std::bind(&CustomBallOnline::Event_CountdownBegin, this, std::placeholders::_1));
+	//gameWrapper->HookEventPost(Events::EnterStartState,				std::bind(&CustomBallOnline::Event_EnterStartState, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::LoadingScreenStart,			std::bind(&CustomBallOnline::Event_LoadingScreenStart, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::LoadingScreenEnd,			std::bind(&CustomBallOnline::Event_LoadingScreenEnd, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::ReplayHandlePostTimeSkip,	std::bind(&CustomBallOnline::Event_ReplaySkipToFrame, this, std::placeholders::_1));
@@ -63,43 +63,7 @@ void CustomBallOnline::onLoad()
 	// ===============================================================================
 
 
-	// wait 3s after onLoad before attempting to "hook" 'acplugin_balltexture_selectedtexture' cvar (to make sure it exists)
-	DELAY(3.0f,
-
-		CVarWrapper acSelectedTexture_cvar = cvarManager->getCvar(Cvars::acSelectedTexture);
-		if (!acSelectedTexture_cvar) {
-			LOG("[ERROR] Unable to access cvar: '{}'", Cvars::acSelectedTexture);
-			return;
-		}
-
-		acSelectedTexture_cvar.addOnValueChanged(
-			std::bind(&CustomBallOnline::changed_acSelectedTexture, this, std::placeholders::_1, std::placeholders::_2));
-
-		LOG("[SUCCESS] Hooked '{}' cvar", Cvars::acSelectedTexture);
-		acHooked = true;
-	);
-
-
 
 	LOG("Custom Ball Online has loaded :)");
 }
 
-
-States CustomBallOnline::GetGameState()
-{
-	if (gameWrapper->IsInFreeplay())
-	{
-		return States::Freeplay;
-	}
-	else if (gameWrapper->IsInReplay())
-	{
-		return States::InReplay;
-	}
-	else if (gameWrapper->IsInOnlineGame() || gameWrapper->IsInGame())
-	{
-		return States::InMatch;
-	}
-	else {
-		return States::MainMenu;
-	}
-}

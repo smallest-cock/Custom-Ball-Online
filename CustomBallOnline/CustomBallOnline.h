@@ -1,5 +1,4 @@
 #pragma once
-
 #include "pch.h"
 #include "GuiBase.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
@@ -13,17 +12,9 @@
 #include "Cvars.hpp"
 #include "Components/Includes.hpp"
 
+
 constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
 constexpr auto pretty_plugin_version = "v" stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH);
-
-
-enum States : uint8_t
-{
-	MainMenu = 0,
-	Freeplay = 1,
-	InReplay = 2,
-	InMatch = 3
-};
 
 
 class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
@@ -31,11 +22,6 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 {
 	//Boilerplate
 	void onLoad() override;
-
-	// bools
-	bool acHooked = false;
-
-	States GetGameState();
 
 
 	// cvar helpers
@@ -54,8 +40,8 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	void cmd_test(std::vector<std::string> args);
 
 
-	// cvar changed callbacks
-	void changed_acSelectedTexture(std::string cvarName, CVarWrapper newCvar);
+	////cvar changed callbacks
+	//void changed_acSelectedTexture(std::string cvarName, CVarWrapper newCvar);
 
 
 	// hook callbacks

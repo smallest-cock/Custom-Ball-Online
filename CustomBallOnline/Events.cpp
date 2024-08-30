@@ -137,20 +137,6 @@ void CustomBallOnline::Event_LoadingScreenStart(std::string eventName)
 	if (!clearUnusedTexturesOnLoading_cvar || !clearUnusedTexturesOnLoading_cvar.getBoolValue()) return;
 
 	RUN_COMMAND(Cvars::clearUnusedSavedTextures);
-
-	// ----------- hook 'acplugin_balltexture_selectedtexture' Cvar if not already hooked -----------
-	if (!acHooked)
-	{
-		auto acSelectedTexture_cvar = cvarManager->getCvar(Cvars::acSelectedTexture);
-		if (!acSelectedTexture_cvar) {
-			LOG("[ERROR] Unable to access cvar: '{}'", Cvars::acSelectedTexture);
-			return;
-		}
-
-		acSelectedTexture_cvar.addOnValueChanged(std::bind(&CustomBallOnline::changed_acSelectedTexture, this, std::placeholders::_1, std::placeholders::_2));
-		LOG("[SUCCESS] Hooked '{}' Cvar", Cvars::acSelectedTexture);
-		acHooked = true;
-	}
 }
 
 
@@ -161,7 +147,7 @@ void CustomBallOnline::Event_EnterStartState(std::string eventName)
 	auto enabled_cvar = GetCvar(Cvars::enabled);
 	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
 
-	States gameState = GetGameState();
+	States gameState = GameState::GetState(gameWrapper);
 	if (gameState == States::Freeplay || gameState == States::InReplay) return;
 
 	DELAY_RUN_COMMAND(Cvars::applyTexture, 0.1f);
@@ -185,6 +171,8 @@ void CustomBallOnline::Event_ReplicatedGoalScored(std::string eventName)
 
 	auto enabled_cvar = GetCvar(Cvars::enabled);
 	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
+
+	if (GameState::IsInFreeplay(gameWrapper)) return;
 
 	DELAY_RUN_COMMAND(Cvars::applyTexture, 0.05f);
 	//RUN_COMMAND(Cvars::applyTexture);
@@ -228,44 +216,18 @@ void CustomBallOnline::Event_SetPausedForEndOfReplay(ActorWrapper caller, void* 
 
 void CustomBallOnline::Event_SetTextureParamValue(ActorWrapper caller, void* parameters, std::string eventName)
 {
+	auto enabled_cvar = GetCvar(Cvars::enabled);
+	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
+
 	UMaterialInstance* mi = reinterpret_cast<UMaterialInstance*>(caller.memory_address);
 	if (!mi || !mi->IsA<UMaterialInstance>()) return;
+
+	UMaterialInterface* parent = mi->Parent;
+	if (!parent || !parent->IsA<UMaterialInterface>()) return;
 
 	UMaterialInstance_execSetTextureParameterValue_Params* params = reinterpret_cast<UMaterialInstance_execSetTextureParameterValue_Params*>(parameters);
 	if (!params) return;
 
-	std::string paramName = params->ParameterName.ToString();
-	
-	UTexture* tex = params->Value;
-	if (!tex) {
-		LOG("UTexture* param is null!");
-		return;
-	}
-
-	if (mi->GetFullName().find("Ball_TA.StaticMeshComponent") != std::string::npos	// only save texture if it's being applied to a ball
-		&& gameWrapper->IsInFreeplay() && Textures.freeToSaveTextures)
-	{
-		auto acSelectedTexture_cvar = cvarManager->getCvar(Cvars::acSelectedTexture);
-		if (!acSelectedTexture_cvar) return;
-		std::string texName = acSelectedTexture_cvar.getStringValue();
-
-		// save texture
-		UTexture2DDynamic* dynamicTex = reinterpret_cast<UTexture2DDynamic*>(tex);
-		
-		// cleanup old texture before saving new one
-		if (Textures.savedTextures.find(texName) != Textures.savedTextures.end())
-		{
-			if (Textures.savedTextures[texName].find(paramName) != Textures.savedTextures[texName].end())
-			{
-				Instances.MarkForDestroy(Textures.savedTextures[texName][paramName]);
-			}
-		}
-
-		Instances.MarkInvincible(dynamicTex);
-		Textures.savedTextures[texName][paramName] = dynamicTex;
-
-
-		LOG("[Events] Updated '{}' {} in savedTextures...", texName, paramName);
-	}
+	Textures.HandleSetTexParamVal(mi, parent, params);
 }
 
