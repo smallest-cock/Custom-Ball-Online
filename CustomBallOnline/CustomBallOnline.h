@@ -32,7 +32,22 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	void RegisterCommand(const Cvars::CvarData& cvar, std::function<void(std::vector<std::string>)> callback);
 	CVarWrapper GetCvar(const Cvars::CvarData& cvar);
 
-	
+
+	// lil command helpers
+	void RunCommand(const Cvars::CvarData& command, float delaySeconds = 0);
+	void AutoRunCommand(const Cvars::CvarData& autoRunBool, const Cvars::CvarData& command, float delaySeconds = 0);
+
+	void RunCommandInterval(const Cvars::CvarData& command, int numIntervals, float delaySeconds, bool delayFirstCommand = false);
+	void AutoRunCommandInterval(
+		const Cvars::CvarData& autoRunBool,
+		const Cvars::CvarData& command,
+		int numIntervals,
+		float delaySeconds,
+		bool delayFirstCommand = false);
+
+	bool PluginEnabled();
+
+
 	// commands
 	void cmd_applyTexture(std::vector<std::string> args);
 	void cmd_clearSavedTextures(std::vector<std::string> args);
@@ -59,6 +74,7 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	void Event_LoadingScreenEnd(std::string eventName);
 	void Event_ReplaySkipToFrame(std::string eventName);
 	void Event_ReplicatedGoalScored(std::string eventName);
+	void Event_CasualIntermission(std::string eventName);
 	void Event_SetTextureParamValue(ActorWrapper caller, void* params, std::string eventName);
 	void Event_SetPausedForEndOfReplay(ActorWrapper caller, void* params, std::string eventName);
 

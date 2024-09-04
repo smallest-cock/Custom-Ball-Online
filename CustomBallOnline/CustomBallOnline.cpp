@@ -51,6 +51,7 @@ void CustomBallOnline::onLoad()
 	gameWrapper->HookEventPost(Events::LoadingScreenEnd,			std::bind(&CustomBallOnline::Event_LoadingScreenEnd, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::ReplayHandlePostTimeSkip,	std::bind(&CustomBallOnline::Event_ReplaySkipToFrame, this, std::placeholders::_1));
 	gameWrapper->HookEventPost(Events::ReplicatedGoalScored,		std::bind(&CustomBallOnline::Event_ReplicatedGoalScored, this, std::placeholders::_1));
+	gameWrapper->HookEventPost(Events::CasualIntermission,			std::bind(&CustomBallOnline::Event_CasualIntermission, this, std::placeholders::_1));
 
 	// hooks with caller
 	gameWrapper->HookEventWithCaller<ActorWrapper>(Events::SetTextureParamValue,

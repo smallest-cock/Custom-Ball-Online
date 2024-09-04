@@ -5,6 +5,8 @@
 
 void CustomBallOnline::cmd_applyTexture(std::vector<std::string> args)
 {
+	if (!PluginEnabled()) return;
+
 	auto acSelectedTexture_cvar = cvarManager->getCvar(Cvars::acSelectedTexture);
 	if (!acSelectedTexture_cvar) {
 		LOG("[ERROR] Unable to access cvar: '{}'", Cvars::acSelectedTexture);
@@ -17,8 +19,7 @@ void CustomBallOnline::cmd_applyTexture(std::vector<std::string> args)
 
 void CustomBallOnline::cmd_clearSavedTextures(std::vector<std::string> args)
 {
-	auto enabled_cvar = GetCvar(Cvars::enabled);
-	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
+	if (!PluginEnabled()) return;
 
 	Textures.ClearSavedTextures();
 }
@@ -26,8 +27,7 @@ void CustomBallOnline::cmd_clearSavedTextures(std::vector<std::string> args)
 
 void CustomBallOnline::cmd_clearUnusedSavedTextures(std::vector<std::string> args)
 {
-	auto enabled_cvar = GetCvar(Cvars::enabled);
-	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
+	if (!PluginEnabled()) return;
 
 	auto acSelectedTexture_cvar = cvarManager->getCvar(Cvars::acSelectedTexture);
 	if (!acSelectedTexture_cvar) {

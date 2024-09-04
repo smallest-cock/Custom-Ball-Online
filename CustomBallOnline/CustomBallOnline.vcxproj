@@ -97,6 +97,7 @@
     <ClCompile Include="Components\Components\Utils.cpp" />
     <ClCompile Include="CvarChangedCallbacks.cpp" />
     <ClCompile Include="Events.cpp" />
+    <ClCompile Include="Functions.cpp" />
     <ClCompile Include="RegisterCvars.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />

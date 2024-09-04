@@ -23,4 +23,5 @@ namespace Events
 	const std::string ReplayHandlePostTimeSkip =	"Function TAGame.GFxHUD_Replay_TA.HandlePostTimeSkip";
 	const std::string SetPausedForEndOfReplay =		"Function TAGame.GFxHUD_Replay_TA.SetPausedForEndOfReplay";
 	const std::string ReplicatedGoalScored =		"Function TAGame.GameEvent_Soccar_TA.EventReplicatedGoalScored";
+	const std::string CasualIntermission =			"Function GameEvent_Lobby_TA.PlayWithBall.BeginState";
 }
