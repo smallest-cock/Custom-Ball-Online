@@ -8,7 +8,7 @@
 #include "bakkesmod/wrappers/cvarmanagerwrapper.h"
 
 extern std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-constexpr bool DEBUG_LOG = true;
+constexpr bool DEBUG_LOG = false;
 
 
 struct FormatString

@@ -6,7 +6,7 @@
 void CustomBallOnline::Event_LoadingScreenEnd(std::string eventName)
 {
 	if (!PluginEnabled()) return;
-	LOG("[HOOK]: {}", eventName);
+	DEBUGLOG("[HOOK]: {}", eventName);
 }
 
 
