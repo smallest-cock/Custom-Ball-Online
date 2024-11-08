@@ -17,7 +17,8 @@ namespace Events
 	constexpr const char* LoadingScreenEnd =			"Function TAGame.TeamColorScriptedTexture_TA.OnRender";
 	constexpr const char* UpdateMipFromPNG =			"Function Engine.Texture2DDynamic.UpdateMipFromPNG";
 	constexpr const char* TextureInit =					"Function Engine.Texture2DDynamic.Init";
-	constexpr const char* SetTextureParamValue =		"Function Engine.MaterialInstance.SetTextureParameterValue";
+	constexpr const char* SetTextureParamValue_MI =		"Function Engine.MaterialInstance.SetTextureParameterValue";
+	constexpr const char* SetTextureParamValue_MIC =	"Function Engine.MaterialInstanceConstant.SetTextureParameterValue";
 	constexpr const char* ReplaySkipToFrame =			"Function TAGame.Replay_TA.SkipToFrame";
 	constexpr const char* ReplayEventSpawned =			"Function TAGame.Replay_TA.EventSpawned";
 	constexpr const char* ReplayHandlePostTimeSkip =	"Function TAGame.GFxHUD_Replay_TA.HandlePostTimeSkip";

@@ -193,7 +193,7 @@ void CustomBallOnline::Event_SetPausedForEndOfReplay(ActorWrapper caller, void* 
 }
 
 
-void CustomBallOnline::Event_SetTextureParamValue(ActorWrapper caller, void* parameters, std::string eventName)
+void CustomBallOnline::Event_SetTextureParamValue_MI(ActorWrapper caller, void* parameters, std::string eventName)
 {
 	auto enabled_cvar = GetCvar(Cvars::enabled);
 	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
@@ -208,5 +208,25 @@ void CustomBallOnline::Event_SetTextureParamValue(ActorWrapper caller, void* par
 	if (!params) return;
 
 	Textures.HandleSetTexParamVal(mi, parent, params);
+}
+
+
+void CustomBallOnline::Event_SetTextureParamValue_MIC(ActorWrapper caller, void* parameters, std::string eventName)
+{
+	auto enabled_cvar = GetCvar(Cvars::enabled);
+	if (!enabled_cvar || !enabled_cvar.getBoolValue()) return;
+
+	UMaterialInstanceConstant* mic = reinterpret_cast<UMaterialInstanceConstant*>(caller.memory_address);
+	if (!mic || !mic->IsA<UMaterialInstanceConstant>()) return;
+
+	UMaterialInterface* parent = mic->Parent;
+	if (!parent || !parent->IsA<UMaterialInterface>()) return;
+
+	// The params struct for MI and MIC SetTextureParamValue are the same, so we can just cast to the MI params struct here (to avoid making a
+	// whole new Textures.HandleSetTexParamVal function to accept a MIC params struct ptr)
+	UMaterialInstance_execSetTextureParameterValue_Params* params = reinterpret_cast<UMaterialInstance_execSetTextureParameterValue_Params*>(parameters);
+	if (!params) return;
+
+	Textures.HandleSetTexParamVal(mic, parent, params);
 }
 

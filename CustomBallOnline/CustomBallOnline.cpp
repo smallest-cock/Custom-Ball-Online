@@ -54,8 +54,11 @@ void CustomBallOnline::onLoad()
 	gameWrapper->HookEventPost(Events::CasualIntermission,			std::bind(&CustomBallOnline::Event_CasualIntermission, this, std::placeholders::_1));
 
 	// hooks with caller
-	gameWrapper->HookEventWithCaller<ActorWrapper>(Events::SetTextureParamValue,
-		std::bind(&CustomBallOnline::Event_SetTextureParamValue, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	gameWrapper->HookEventWithCaller<ActorWrapper>(Events::SetTextureParamValue_MI,
+		std::bind(&CustomBallOnline::Event_SetTextureParamValue_MI, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	
+	gameWrapper->HookEventWithCaller<ActorWrapper>(Events::SetTextureParamValue_MIC,
+		std::bind(&CustomBallOnline::Event_SetTextureParamValue_MIC, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
 	gameWrapper->HookEventWithCallerPost<ActorWrapper>(Events::SetPausedForEndOfReplay,
 		std::bind(&CustomBallOnline::Event_SetPausedForEndOfReplay, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));

@@ -75,7 +75,8 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 	void Event_ReplaySkipToFrame(std::string eventName);
 	void Event_ReplicatedGoalScored(std::string eventName);
 	void Event_CasualIntermission(std::string eventName);
-	void Event_SetTextureParamValue(ActorWrapper caller, void* params, std::string eventName);
+	void Event_SetTextureParamValue_MI(ActorWrapper caller, void* params, std::string eventName);
+	void Event_SetTextureParamValue_MIC(ActorWrapper caller, void* params, std::string eventName);
 	void Event_SetPausedForEndOfReplay(ActorWrapper caller, void* params, std::string eventName);
 
 public:
