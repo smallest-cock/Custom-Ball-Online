@@ -31,10 +31,6 @@ Enables custom ball textures in online matches
 
 Find the latest version in [Releases](https://github.com/smallest-cock/Custom-Ball-Online/releases)
 
-1. Download `CustomBallOnline.zip`
-
-2. Extract it, and run `install.bat`
-
 <br>
 
 ## 🚧 Errors / Troubleshooting
