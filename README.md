@@ -29,7 +29,7 @@ Enables custom ball textures in online matches
 
 ## 🔧 How to install
 
-Find the latest version in [Releases](https://github.com/smallest-cock/Custom-Ball-Online/releases)
+Find the latest version in [Releases](https://github.com/smallest-cock/Custom-Ball-Online/releases/latest)
 
 <br>
 
