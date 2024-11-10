@@ -45,7 +45,7 @@ void CustomBallOnline::RenderSettings()
 				clearUnusedTexturesOnLoading_cvar.setValue(clearUnusedTexturesOnLoading);
 			}
 			if (ImGui::IsItemHovered()) {
-				ImGui::SetTooltip("can save memory");
+				ImGui::SetTooltip("Can save memory if you dont switch textures often. Otherwise, leave it unchecked to help reduce lag when switching between textures");
 			}
 
 			GUI::Spacing(8);

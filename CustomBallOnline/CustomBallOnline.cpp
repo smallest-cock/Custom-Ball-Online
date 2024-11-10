@@ -25,7 +25,7 @@ void CustomBallOnline::onLoad()
 
 	// bools
 	RegisterCvar_Bool(Cvars::enabled,						true);
-	RegisterCvar_Bool(Cvars::clearUnusedTexturesOnLoading,	true);
+	RegisterCvar_Bool(Cvars::clearUnusedTexturesOnLoading,	false);
 
 
 	// ================================== COMMANDS ===================================
