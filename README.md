@@ -1,12 +1,12 @@
 # Custom Ball Online (BakkesMod plugin)
 Enables custom ball textures in online matches
 
+This plugin now works with the latest version of [AlphaConsole](https://bakkesplugins.com/plugins/view/108) 😄
+
 <br>
 
 >[!IMPORTANT]
->~~Must be using an [older version of AlphaConsole](./AC%20stuff/AlphaConsole.md) for custom ball textures to work in online matches!~~
->
->This plugin now works with the latest version of [AlphaConsole](https://bakkesplugins.com/plugins/view/108) 😄
+>This plugin only works with `.png` images (soon to be fixed). If your textures are `.jpg` you should probably convert them to PNG
 
 <br>
 
