@@ -18,6 +18,7 @@ void CustomBallOnline::onLoad()
 	if (!Instances.CheckGlobals()) return;
 
 	// other init
+	gui_footer_init();
 	Textures.Initialize(gameWrapper);
 
 

@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "CustomBallOnline.h"
-#include "GuiTools.hpp"
 
 
 void CustomBallOnline::RenderSettings()
@@ -11,24 +10,11 @@ void CustomBallOnline::RenderSettings()
     if (!enabled_cvar || !clearUnusedTexturesOnLoading_cvar) return;
 
 
-	// ---------------- calculate ImGui::BeginChild sizes ------------------
+	const float content_height = ImGui::GetContentRegionAvail().y - footer_height;	// available height after accounting for footer
 
-	ImVec2 availableSpace = ImGui::GetContentRegionAvail();
-	availableSpace.y -= 4;		// act as if availableSpace height is 4px smaller, bc for some reason availableSpace height is cap (prevents scroll bars)
-	float headerHeight = 80.0f;
-	float footerHeight = 35.0f;
-	float contentHeight = availableSpace.y - footerHeight;
-
-	ImVec2 contentSize = ImVec2(0, contentHeight);
-	ImVec2 footerSize = ImVec2(0, footerHeight);
-	ImVec2 headerSize = ImVec2(0, headerHeight);
-
-	// ----------------------------------------------------------------------
-
-
-    if (ImGui::BeginChild("Content##cbo", contentSize))
+	if (ImGui::BeginChild("ContentSection", ImVec2(0, content_height)))
     {
-		GUI::SettingsHeader("Header##cbo", pretty_plugin_version, headerSize, false);
+		GUI::SettingsHeader("Header", pretty_plugin_version, ImVec2(0, header_height), false);
     
 		bool enabled = enabled_cvar.getBoolValue();
 		if (ImGui::Checkbox("Enabled", &enabled))
@@ -41,10 +27,12 @@ void CustomBallOnline::RenderSettings()
 			GUI::Spacing(2);
 
 			bool clearUnusedTexturesOnLoading = clearUnusedTexturesOnLoading_cvar.getBoolValue();
-			if (ImGui::Checkbox("Clear inactive textures on loading screen", &clearUnusedTexturesOnLoading)) {
+			if (ImGui::Checkbox("Clear inactive textures on loading screen", &clearUnusedTexturesOnLoading))
+			{
 				clearUnusedTexturesOnLoading_cvar.setValue(clearUnusedTexturesOnLoading);
 			}
-			if (ImGui::IsItemHovered()) {
+			if (ImGui::IsItemHovered())
+			{
 				ImGui::SetTooltip("Can save memory if you dont switch textures often. Otherwise, leave it unchecked to help reduce lag when switching between textures");
 			}
 
@@ -52,47 +40,87 @@ void CustomBallOnline::RenderSettings()
 
 			if (ImGui::Button("Clear all saved textures"))
 			{
-				GAME_THREAD_EXECUTE(RUN_COMMAND(Cvars::clearSavedTextures));
+				GAME_THREAD_EXECUTE(
+					RunCommand(Cvars::clearSavedTextures);
+				);
 			}
 
 			GUI::Spacing(2);
 
 			if (ImGui::Button("Clear unused saved textures"))
 			{
-				GAME_THREAD_EXECUTE(RUN_COMMAND(Cvars::clearUnusedSavedTextures));
+				GAME_THREAD_EXECUTE(
+					RunCommand(Cvars::clearUnusedSavedTextures);
+				);
 			}
 
-			if (!Textures.savedTextures.empty())
+			GUI::Spacing(4);
+
+			uint8_t num_saved_texture_sets = 0;
+
+			// list of saved texture info
+			if (!Textures.saved_texture_data.empty())
 			{
-				// can do something here... like set a tooltip only if there are saved textures
+				if (ImGui::CollapsingHeader("saved texture data"))
+				{
+					ImGui::Indent();
+					GUI::Spacing(2);
+
+					for (const auto& [textureName, tex_data] : Textures.saved_texture_data)
+					{
+						if (!tex_data.textures.empty()) num_saved_texture_sets++;
+
+						if (ImGui::CollapsingHeader(textureName.c_str()))
+						{
+							ImGui::Indent(50);
+
+							for (const auto& [param_name, img_path] : tex_data.img_paths)
+							{
+								std::string txt = param_name + ":\t" + img_path.string();
+								ImGui::Text(txt.c_str());
+
+								GUI::SameLineSpacing_relative(20);
+
+								ImGui::PushID(img_path.c_str());
+
+								if (ImGui::Button("Open"))
+								{
+									Files::OpenFolder(img_path.parent_path());
+								}
+
+								ImGui::PopID();
+							}
+							
+							ImGui::Unindent(50);
+						}
+
+						ImGui::Spacing();
+					}
+
+					GUI::Spacing(2);
+
+					ImGui::Text("Cached ball textures: %d", num_saved_texture_sets);
+
+					ImGui::Unindent();
+				}
 			}
 
 			GUI::Spacing(2);
 
-			std::string numSaved = "Saved textures: " + std::to_string(Textures.savedTextures.size());
-			ImGui::Text(numSaved.c_str());
-
-			GUI::Spacing(4);
-
-			// list of saved texture names
-			if (!Textures.savedTextures.empty())
-			{
-				if (ImGui::CollapsingHeader("saved", ImGuiTreeNodeFlags_None))
-				{
-					GUI::Spacing(2);
-
-					for (const auto& [textureName, texMap] : Textures.savedTextures)
-					{
-						std::string label = "*\t" + textureName;
-						ImGui::Text(label.c_str());
-
-						GUI::Spacing();
-					}
-				}
-			}
 		}
     }
 	ImGui::EndChild();
 
-    GUI::SettingsFooter("Footer##cbo", footerSize, availableSpace.x, false);
+
+	// footer
+	const auto remaining_space = ImGui::GetContentRegionAvail();
+
+	if (assets_exist)
+	{
+		GUI::SettingsFooter("Footer", remaining_space, footer_links);
+	}
+	else
+	{
+		GUI::OldSettingsFooter("Footer", remaining_space);
+	}
 }

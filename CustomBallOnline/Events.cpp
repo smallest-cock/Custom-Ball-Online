@@ -172,11 +172,11 @@ void CustomBallOnline::Event_SetPausedForEndOfReplay(ActorWrapper caller, void* 
 	{
 		replay->ReplayPause();
 
-		DELAY_CAPTURE(0.1f, replay,
+		DELAY_CAPTURE(0.1f,
 
-			RUN_COMMAND(Cvars::applyTexture);
+			RunCommand(Cvars::applyTexture);
 
-			DELAY_CAPTURE(0.1f, replay,
+			DELAY_CAPTURE(0.1f,
 
 				if (replay && replay->IsA<AGFxHUD_Replay_TA>())
 				{
@@ -186,9 +186,9 @@ void CustomBallOnline::Event_SetPausedForEndOfReplay(ActorWrapper caller, void* 
 					LOG("[ERROR] AGFxHUD_Replay_TA* is null (from capture)");
 				}
 
-			);
+			, replay);
 			
-		);
+		, replay);
 	}
 }
 

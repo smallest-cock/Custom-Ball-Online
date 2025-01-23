@@ -29,5 +29,9 @@
 
 #pragma comment(lib, "Shlwapi.lib")
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "external/stb/stb_image.h"
+
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;

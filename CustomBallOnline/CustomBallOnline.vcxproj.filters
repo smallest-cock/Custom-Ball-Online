@@ -46,6 +46,12 @@
     <Filter Include="Components\Components">
       <UniqueIdentifier>{b70cb3a6-bd26-4a8d-a2d4-bebb5f9abdd4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{67d77dab-edf4-4437-a424-fa1e5e31f55c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\stb">
+      <UniqueIdentifier>{acd13ee0-ef73-4056-af8b-6d574f1dab03}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\imgui.cpp">
@@ -151,6 +157,9 @@
       <Filter>Plugin\src</Filter>
     </ClCompile>
     <ClCompile Include="Functions.cpp">
+      <Filter>Plugin\src</Filter>
+    </ClCompile>
+    <ClCompile Include="GuiTools.cpp">
       <Filter>Plugin\src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -334,6 +343,9 @@
     </ClInclude>
     <ClInclude Include="Macros.hpp">
       <Filter>Plugin\header</Filter>
+    </ClInclude>
+    <ClInclude Include="external\stb\stb_image.h">
+      <Filter>external\stb</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

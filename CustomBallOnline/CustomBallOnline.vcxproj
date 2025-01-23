@@ -98,6 +98,7 @@
     <ClCompile Include="CvarChangedCallbacks.cpp" />
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="Functions.cpp" />
+    <ClCompile Include="GuiTools.cpp" />
     <ClCompile Include="RegisterCvars.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -137,6 +138,7 @@
     <ClInclude Include="Components\Includes.hpp" />
     <ClInclude Include="Cvars.hpp" />
     <ClInclude Include="Events.hpp" />
+    <ClInclude Include="external\stb\stb_image.h" />
     <ClInclude Include="GuiTools.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />

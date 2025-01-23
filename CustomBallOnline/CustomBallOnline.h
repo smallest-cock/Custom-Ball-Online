@@ -10,6 +10,7 @@
 #include "Macros.hpp"
 #include "Events.hpp"
 #include "Cvars.hpp"
+#include "GuiTools.hpp"
 #include "Components/Includes.hpp"
 
 
@@ -17,8 +18,7 @@ constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_M
 constexpr auto pretty_plugin_version = "v" stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH);
 
 
-class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
-	,public SettingsWindowBase
+class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin, public SettingsWindowBase
 {
 	//Boilerplate
 	void onLoad() override;
@@ -82,4 +82,17 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin
 public:
 	// GUI
 	void RenderSettings() override;
+
+	void gui_footer_init();
+
+	// header/footer stuff
+	bool assets_exist = false;
+
+	static constexpr float			header_height = 80.0f;
+	static constexpr float			footer_height = 40.0f;
+	static constexpr float			footer_img_height = footer_height;
+
+	static constexpr const wchar_t* github_link = L"https://github.com/smallest-cock/Custom-Ball-Online";
+	static constexpr const char* github_link_tooltip = "GitHub page";
+	GUI::FooterLinks footer_links;
 };
