@@ -83,16 +83,16 @@ public:
 	// GUI
 	void RenderSettings() override;
 
-	void gui_footer_init();
 
 	// header/footer stuff
+	void gui_footer_init();
 	bool assets_exist = false;
+	std::shared_ptr<GUI::FooterLinks> footer_links;
 
-	static constexpr float			header_height = 80.0f;
-	static constexpr float			footer_height = 40.0f;
-	static constexpr float			footer_img_height = footer_height;
+	static constexpr float header_height =					80.0f;
+	static constexpr float footer_height =					40.0f;
+	static constexpr float footer_img_height =				25.0f;
 
-	static constexpr const wchar_t* github_link = L"https://github.com/smallest-cock/Custom-Ball-Online";
-	static constexpr const char* github_link_tooltip = "GitHub page";
-	GUI::FooterLinks footer_links;
+	static constexpr const wchar_t* github_link =			L"https://github.com/smallest-cock/Custom-Ball-Online";
+	static constexpr const char* github_link_tooltip =		"GitHub page";
 };

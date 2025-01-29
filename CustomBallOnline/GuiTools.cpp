@@ -6,22 +6,22 @@ namespace GUI
 {
 	namespace Colors
 	{
-		const ImVec4 White =				{ 1, 1, 1, 1 };
-		const ImVec4 Red =					{ 1, 0, 0, 1 };
-		const ImVec4 Green =				{ 0, 1, 0, 1 };
-		const ImVec4 Blue =					{ 0, 0, 1, 1 };
+		const ImVec4 White = { 1, 1, 1, 1 };
+		const ImVec4 Red = { 1, 0, 0, 1 };
+		const ImVec4 Green = { 0, 1, 0, 1 };
+		const ImVec4 Blue = { 0, 0, 1, 1 };
 
-		const ImVec4 Yellow =				{ 1, 1, 0, 1 };
-		const ImVec4 BlueGreen =			{ 0, 1, 1, 1 };
-		const ImVec4 Pinkish =				{ 1, 0, 1, 1 };
+		const ImVec4 Yellow = { 1, 1, 0, 1 };
+		const ImVec4 BlueGreen = { 0, 1, 1, 1 };
+		const ImVec4 Pinkish = { 1, 0, 1, 1 };
 
-		const ImVec4 LightBlue =			{ 0.5f, 0.5f, 1.0f, 1.0f };
-		const ImVec4 LightRed =				{ 1.0f, 0.4f, 0.4f, 1.0f };
-		const ImVec4 LightGreen =			{ 0.5f, 1.0f, 0.5f, 1.0f };
+		const ImVec4 LightBlue = { 0.5f, 0.5f, 1.0f, 1.0f };
+		const ImVec4 LightRed = { 1.0f, 0.4f, 0.4f, 1.0f };
+		const ImVec4 LightGreen = { 0.5f, 1.0f, 0.5f, 1.0f };
 
-		const ImVec4 DarkGreen =			{ 0.0f, 0.5f, 0.0f, 1.0f };
+		const ImVec4 DarkGreen = { 0.0f, 0.5f, 0.0f, 1.0f };
 
-		const ImVec4 Gray =					{ 0.4f, 0.4f, 0.4f, 1.0f };
+		const ImVec4 Gray = { 0.4f, 0.4f, 0.4f, 1.0f };
 	}
 
 
@@ -72,7 +72,6 @@ namespace GUI
 		}
 	}
 
-
 	void SameLineSpacing_relative(float horizontalSpacingPx)
 	{
 		ImGui::SameLine();
@@ -102,12 +101,11 @@ namespace GUI
 		ImGui::EndChild();
 	}
 
-
-	void SettingsFooter(const char* id, const ImVec2& size, FooterLinks& footer_links, bool showBorder)
+	void SettingsFooter(const char* id, const ImVec2& size, std::shared_ptr<FooterLinks> footer_links, bool showBorder)
 	{
 		if (ImGui::BeginChild(id, size, showBorder))
 		{
-			display_footer_links(footer_links);
+			footer_links->display();
 		}
 		ImGui::EndChild();
 	}
@@ -130,28 +128,5 @@ namespace GUI
 			ClickableLink(linkText, "https://discord.gg/tHZFsMsvDU", Colors::Yellow, text_size);
 		}
 		ImGui::EndChild();
-	}
-
-
-	void display_footer_links(FooterLinks& footer_links, float horizontal_spacing_between_links_px)
-	{
-		// calculate horizontal offset to center links
-		const float total_width =
-			footer_links.discord.image_size.x +
-			footer_links.github.image_size.x +
-			footer_links.youtube.image_size.x +
-			(2 * horizontal_spacing_between_links_px);
-
-		float horizontal_offset = (ImGui::GetContentRegionAvail().x - total_width) / 2;
-		horizontal_offset -= 50;	// it seems slightly shifted to the right, so subtract 50 to compensate
-		ImGui::SetCursorPosX(horizontal_offset);
-
-
-		// display links
-		footer_links.discord.display();
-		SameLineSpacing_relative(horizontal_spacing_between_links_px);
-		footer_links.github.display();
-		SameLineSpacing_relative(horizontal_spacing_between_links_px);
-		footer_links.youtube.display();
 	}
 }

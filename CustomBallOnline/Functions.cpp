@@ -69,39 +69,24 @@ void CustomBallOnline::gui_footer_init()
 		return;
 	}
 
-	fs::path assets[] =
-	{
-		plugin_assets_folder / "discord.png",
+	GUI::FooterAssets assets = {
 		plugin_assets_folder / "github.png",
+		plugin_assets_folder / "discord.png",
 		plugin_assets_folder / "youtube.png",
 	};
 
-	bool asset_missing = false;
-	for (const auto& asset : assets)
-	{
-		if (!fs::exists(asset))
-		{
-			LOG("[ERROR] File not found: {}", asset.string());
-			asset_missing = true;
-		}
-	}
+	assets_exist = assets.all_assets_exist();
 
-	if (asset_missing)
+	if (assets_exist)
 	{
-		LOG("One or more plugin asset is missing... will use old ugly settings footer instead :(");
-		assets_exist = false;
+		footer_links = std::make_shared<GUI::FooterLinks>(
+			GUI::ImageLink(assets.github_img_path, github_link, github_link_tooltip, footer_img_height),
+			GUI::ImageLink(assets.discord_img_path, GUI::discord_link, GUI::discord_desc, footer_img_height),
+			GUI::ImageLink(assets.youtube_img_path, GUI::youtube_link, GUI::youtube_desc, footer_img_height)
+		);
 	}
 	else
 	{
-		assets_exist = true;
-
-		footer_links =
-		{
-			GUI::ImageLink(std::make_shared<ImageWrapper>(assets[0]),	GUI::discord_link,	GUI::discord_desc),
-			GUI::ImageLink(std::make_shared<ImageWrapper>(assets[1]),	github_link,		github_link_tooltip),
-			GUI::ImageLink(std::make_shared<ImageWrapper>(assets[2]),	GUI::youtube_link,	GUI::youtube_desc)
-		};
-
-		footer_links.set_height(footer_img_height);
+		LOG("One or more plugin asset is missing... will use old ugly settings footer instead :(");
 	}
 }
