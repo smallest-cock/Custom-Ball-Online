@@ -21,16 +21,13 @@
 #include <iostream>
 #include <fstream>
 #include <shellapi.h>
+#pragma comment(lib, "Shlwapi.lib")
 
-#include "nlohmann.hpp"
-#include "SDK/SdkHeaders.hpp"
+#include <json/single_include/nlohmann/json.hpp>
+#include <RLSDK/RLSDK_w_pch_includes/SdkHeaders.hpp>
 
 #include "logging.h"
 
-#pragma comment(lib, "Shlwapi.lib")
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "external/stb/stb_image.h"
 
 
 namespace fs = std::filesystem;

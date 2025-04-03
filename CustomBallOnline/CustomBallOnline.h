@@ -10,11 +10,12 @@
 #include "Macros.hpp"
 #include "Events.hpp"
 #include "Cvars.hpp"
-#include "GuiTools.hpp"
+#include <ModUtils/includes.hpp>
 #include "Components/Includes.hpp"
 
 
-constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
+constexpr auto full_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
+constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH);
 constexpr auto pretty_plugin_version = "v" stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH);
 
 
@@ -22,6 +23,9 @@ class CustomBallOnline: public BakkesMod::Plugin::BakkesModPlugin, public Settin
 {
 	//Boilerplate
 	void onLoad() override;
+
+
+	std::string h_label;
 
 
 	// cvar helpers

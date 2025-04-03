@@ -3,6 +3,58 @@
 
 
 
+enum States : uint8_t
+{
+	MainMenu = 0,
+	Freeplay = 1,
+	InReplay = 2,
+	InMatch = 3
+};
+
+namespace GameState
+{
+	States GetState(std::shared_ptr<GameWrapper> gw)
+	{
+		if (gw->IsInFreeplay())
+		{
+			return States::Freeplay;
+		}
+		else if (gw->IsInReplay())
+		{
+			return States::InReplay;
+		}
+		else if (gw->IsInOnlineGame() || gw->IsInGame())
+		{
+			return States::InMatch;
+		}
+		else {
+			return States::MainMenu;
+		}
+	}
+
+	bool IsInMatch(std::shared_ptr<GameWrapper> gw)
+	{
+		return GetState(gw) == States::InMatch;
+	}
+
+	bool IsInFreeplay(std::shared_ptr<GameWrapper> gw)
+	{
+		return GetState(gw) == States::Freeplay;
+	}
+
+	bool IsInMainMenu(std::shared_ptr<GameWrapper> gw)
+	{
+		return GetState(gw) == States::MainMenu;
+	}
+
+	bool IsInReplay(std::shared_ptr<GameWrapper> gw)
+	{
+		return GetState(gw) == States::InReplay;
+	}
+}
+
+
+
 void CustomBallOnline::Event_LoadingScreenEnd(std::string eventName)
 {
 	if (!PluginEnabled()) return;

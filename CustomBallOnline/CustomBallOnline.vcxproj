@@ -49,6 +49,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)plugins\</OutDir>
     <IntDir>$(SolutionDir)build\.intermediates\$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)external;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -91,14 +92,25 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\external\ModUtils\gui\GuiTools.cpp" />
+    <ClCompile Include="..\external\ModUtils\util\Utils.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\GameDefines.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\AkAudio_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Core_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Engine_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\GFxUI_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\IpDrv_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\OnlineSubsystemEOS_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\ProjectX_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\TAGame_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\WinDrv_classes.cpp" />
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\XAudio2_classes.cpp" />
     <ClCompile Include="Commands.cpp" />
     <ClCompile Include="Components\Components\Instances.cpp" />
     <ClCompile Include="Components\Components\Textures.cpp" />
-    <ClCompile Include="Components\Components\Utils.cpp" />
     <ClCompile Include="CvarChangedCallbacks.cpp" />
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="Functions.cpp" />
-    <ClCompile Include="GuiTools.cpp" />
     <ClCompile Include="RegisterCvars.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -119,27 +131,49 @@
     </ClCompile>
     <ClCompile Include="CustomBallOnline.cpp" />
     <ClCompile Include="GuiBase.cpp" />
-    <ClCompile Include="SDK\GameDefines.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\AkAudio_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\Core_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\Engine_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\GFxUI_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\IpDrv_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\OnlineSubsystemEOS_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\ProjectX_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\TAGame_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\WinDrv_classes.cpp" />
-    <ClCompile Include="SDK\SDK_HEADERS\XAudio2_classes.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\external\ModUtils\gui\GuiTools.hpp" />
+    <ClInclude Include="..\external\ModUtils\includes.hpp" />
+    <ClInclude Include="..\external\ModUtils\util\Utils.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\GameDefines.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SdkHeaders.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\AkAudio_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\AkAudio_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\AkAudio_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Core_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Core_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Core_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Engine_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Engine_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Engine_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\GFxUI_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\GFxUI_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\GFxUI_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\IpDrv_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\IpDrv_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\IpDrv_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\OnlineSubsystemEOS_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\OnlineSubsystemEOS_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\OnlineSubsystemEOS_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\ProjectX_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\ProjectX_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\ProjectX_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\TAGame_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\TAGame_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\TAGame_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\WinDrv_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\WinDrv_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\WinDrv_structs.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\XAudio2_classes.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\XAudio2_parameters.hpp" />
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\XAudio2_structs.hpp" />
     <ClInclude Include="Components\Components\Instances.hpp" />
     <ClInclude Include="Components\Components\Textures.hpp" />
-    <ClInclude Include="Components\Components\Utils.hpp" />
     <ClInclude Include="Components\Includes.hpp" />
     <ClInclude Include="Cvars.hpp" />
     <ClInclude Include="Events.hpp" />
     <ClInclude Include="external\stb\stb_image.h" />
-    <ClInclude Include="GuiTools.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imguivariouscontrols.h" />
@@ -156,42 +190,9 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="Macros.hpp" />
-    <ClInclude Include="nlohmann.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="GuiBase.h" />
     <ClInclude Include="CustomBallOnline.h" />
-    <ClInclude Include="SDK\GameDefines.hpp" />
-    <ClInclude Include="SDK\SdkHeaders.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\AkAudio_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\AkAudio_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\AkAudio_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\Core_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\Core_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\Core_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\Engine_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\Engine_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\Engine_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\GFxUI_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\GFxUI_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\GFxUI_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\IpDrv_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\IpDrv_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\IpDrv_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\OnlineSubsystemEOS_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\OnlineSubsystemEOS_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\OnlineSubsystemEOS_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\ProjectX_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\ProjectX_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\ProjectX_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\TAGame_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\TAGame_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\TAGame_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\WinDrv_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\WinDrv_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\WinDrv_structs.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\XAudio2_classes.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\XAudio2_parameters.hpp" />
-    <ClInclude Include="SDK\SDK_HEADERS\XAudio2_structs.hpp" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>

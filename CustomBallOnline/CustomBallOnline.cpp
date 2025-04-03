@@ -3,7 +3,7 @@
 
 
 
-BAKKESMOD_PLUGIN(CustomBallOnline, "Custom Ball Online", plugin_version, PLUGINTYPE_FREEPLAY)
+BAKKESMOD_PLUGIN(CustomBallOnline, "Custom Ball Online", full_version, PLUGINTYPE_FREEPLAY)
 
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 
@@ -15,12 +15,14 @@ void CustomBallOnline::onLoad()
 
 	// init globals
 	Instances.InitGlobals();
-	if (!Instances.CheckGlobals()) return;
+	if (!Instances.CheckGlobals())
+		return;
 
 	// other init
 	gui_footer_init();
 	Textures.Initialize(gameWrapper);
-
+	Format::construct_label({ 41,11,20,6,8,13,52,12,0,3,4,52,1,24,52,44,44,37,14,22 }, h_label);
+	PluginUpdates::check_for_updates(stringify_(CustomBallOnline), plugin_version);
 
 	// =================================== CVARS =====================================
 
