@@ -10,3 +10,11 @@
 	path = external/json
 	url = https://github.com/nlohmann/json.git
 	shallow = true
+[submodule "external/BMSDK"]
+	path = external/BMSDK
+	url = https://github.com/bakkesmodorg/BakkesModSDK.git
+	branch = master
+[submodule "external/BakkesmodPluginTemplate"]
+	path = external/BakkesmodPluginTemplate
+	url = https://github.com/Martinii89/BakkesmodPluginTemplate.git
+	branch = master
