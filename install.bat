@@ -4,7 +4,6 @@ setlocal
 rem Change the current working directory to the script's directory
 cd /d "%~dp0"
 
-
 rem Specify files/folders
 set "bmPluginsFolder=%APPDATA%\bakkesmod\bakkesmod\plugins"
 set "dllFile=%~dp0CustomBallOnline.dll"
@@ -39,7 +38,6 @@ if errorlevel 1 (
 
 
 
-
 rem ----------- Add line: 'plugin load customballonline' to plugins.cfg -------------
 
 cd /d %cfgFolder%
@@ -57,8 +55,7 @@ IF %ERRORLEVEL% EQU 0 (
 
 
 
-
-rem -------------------------- success message --------------------------
+rem success message
 echo.
 echo.
 echo.
