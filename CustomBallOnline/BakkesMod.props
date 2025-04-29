@@ -12,12 +12,12 @@
       <AdditionalLibraryDirectories>$(BakkesModPath)\bakkesmodsdk\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>pluginsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
+    <PostBuildEvent Condition="'$(CI)' != 'true'">
       <Command> "$(BakkesModPath)\bakkesmodsdk\bakkesmod-patch.exe" "$(TargetPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup />
-  <Target Name="ShowBakkesInfo" BeforeTargets="PrepareForBuild">
+  <Target Name="ShowBakkesInfo" BeforeTargets="PrepareForBuild" Condition="'$(CI)' != 'true'">
     <Message Text="Using bakkes found at $(BakkesModPath)" Importance="normal" />
   </Target>
 </Project>
