@@ -165,6 +165,9 @@
     <ClCompile Include="..\external\BakkesmodPluginTemplate\IMGUI\imguivariouscontrols.cpp">
       <Filter>IMGUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Extras.cpp">
+      <Filter>RLSDK\SDK_HEADERS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="version.h">
@@ -349,6 +352,12 @@
     </ClInclude>
     <ClInclude Include="..\external\BakkesmodPluginTemplate\IMGUI\imstb_truetype.h">
       <Filter>IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Components\Component.hpp">
+      <Filter>Components\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\RLSDK\RLSDK_w_pch_includes\SDK_HEADERS\Extras.hpp">
+      <Filter>RLSDK\SDK_HEADERS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

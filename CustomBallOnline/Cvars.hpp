@@ -2,35 +2,35 @@
 #include <string>
 
 
+#define CVAR(name, desc) CvarData("cbo_" name, desc) // automatically apply the prefix to cvar names
+
+struct CvarData
+{
+	const char* name;
+	const char* description;
+
+	constexpr CvarData(const char* name, const char* description) : name(name), description(description) {}
+};
+
 
 namespace Cvars
 {
-	const std::string prefix = "cbo_";
-
-	struct CvarData
-	{
-		std::string name;
-		std::string description;
-
-		// constructor to automatically add prefix to name
-		CvarData(const std::string& name, const std::string& description)
-			: name(prefix + name), description(description) {}
-	};
-
-	const std::string acSelectedTexture =						"acplugin_balltexture_selectedtexture";
-
-	// ============================== cvars =============================
+	const std::string acSelectedTexture =				"acplugin_balltexture_selectedtexture";
 
 	// bools
-	const CvarData enabled =						{ "enabled",						"plugin enabled"};
-	const CvarData clearUnusedTexturesOnLoading =	{ "clear_unused_on_loading",		"clear unused textures on loading screen"};
+	constexpr CvarData enabled =						CVAR("enabled",							"plugin enabled");
+	constexpr CvarData clearUnusedTexturesOnLoading =	CVAR("clear_unused_on_loading",			"clear unused textures on loading screen");
 
-
-	// ============================ commands ============================
-
-	const CvarData applyTexture =					{ "apply_ball_texture",				"apply the currently selected ball texture"};
-	const CvarData clearSavedTextures =				{ "clear_saved_textures",			"clear saved/stored ball textures"};
-	const CvarData clearUnusedSavedTextures =		{ "clear_unused_saved_textures",	"clear unused saved/stored ball textures"};
-	const CvarData test =							{ "test",							"test"};
+	// strings
+	constexpr CvarData selectedTexture =				CVAR("selected_texture",				"selected ball texture");
 }
 
+namespace Commands
+{
+	constexpr CvarData applyTexture =					CVAR("apply_ball_texture",				"apply the currently selected ball texture");
+	constexpr CvarData clearSavedTextures =				CVAR("clear_saved_textures",			"clear saved/stored ball textures");
+	constexpr CvarData clearUnusedSavedTextures =		CVAR("clear_unused_saved_textures",		"clear unused saved/stored ball textures");
+	constexpr CvarData test =							CVAR("test",							"test");
+}
+
+#undef CVAR
