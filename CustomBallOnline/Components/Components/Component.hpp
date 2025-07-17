@@ -58,7 +58,7 @@ public:
 		std::string strWithComponentName = std::format("[{}] ERROR: {}", Derived::componentName, format_str);
 		::LOG(std::vformat(strWithComponentName, std::make_format_args(args...)));
 	}
-	
+
 	// hooks
 	void hookEvent(const char* funcName, std::function<void(std::string eventName)> callback)
 	{
@@ -87,6 +87,7 @@ public:
 
 	// cvars
 	CVarWrapper getCvar(const CvarData& cvar) { return _globalCvarManager->getCvar(cvar.name); }
+	CVarWrapper getCvar(const std::string cvar) { return _globalCvarManager->getCvar(cvar); }
 
 	CVarWrapper registerCvar_bool(const CvarData& cvar, bool startingValue, bool log = true)
 	{

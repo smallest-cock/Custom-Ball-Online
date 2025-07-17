@@ -1,12 +1,22 @@
 # Custom Ball Online (BakkesMod plugin)
 Enables custom ball skins in online matches
 
-<img src="assets/images/plugin_screenshot.png" width="80%">
+
+<img src="assets/images/plugin_screenshot.png" width="700">
+
+<br>
+
+Works with the latest version of [AlphaConsole](https://bakkesplugins.com/plugins/view/108) 😄
+
+<br>
 
 ## 🎮 How to use
-1. Have the plugin installed and a ball skin selected
+
+1. Have [AlphaConsole](https://bakkesplugins.com/plugins/view/108) installed (and this plugin)
+
+2. Have a ball skin selected in AlphaConsole
    
-2. Join a match, and your ball skin should automatically be applied
+3. Join a match, and your ball skin should automatically be applied
 
 <br>
 

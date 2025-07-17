@@ -20,9 +20,6 @@ namespace Cvars
 	// bools
 	constexpr CvarData enabled =						CVAR("enabled",							"plugin enabled");
 	constexpr CvarData clearUnusedTexturesOnLoading =	CVAR("clear_unused_on_loading",			"clear unused textures on loading screen");
-
-	// strings
-	constexpr CvarData selectedTexture =				CVAR("selected_texture",				"selected ball texture");
 }
 
 namespace Commands

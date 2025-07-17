@@ -14,8 +14,6 @@ void CustomBallOnline::RenderSettings()
 
 		GUI::alt_settings_header(h_label.c_str(), pretty_plugin_version);
 
-		GUI::Spacing(2);
-
 		bool enabled = enabled_cvar.getBoolValue();
 		if (ImGui::Checkbox("Enabled", &enabled))
 			enabled_cvar.setValue(enabled);

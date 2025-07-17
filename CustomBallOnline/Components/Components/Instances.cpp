@@ -413,4 +413,4 @@ void InstancesComponent::spawnNotification(const std::string& title, const std::
 }
 
 
-class InstancesComponent Instances {};
+class InstancesComponent Instances{};
