@@ -39,6 +39,32 @@ void TexturesComponent::initPaths()
 	}
 }
 
+//Create a Custom JSON File
+void TexturesComponent::createCustomJsonFile(const std::string& name, const std::string& imageName, const std::string& fileName)
+{
+    if (!fs::exists(m_ballTexturesFolder))
+    {
+        LOGERROR("BallTextures folder does not exist.");
+        return;
+    }
+
+    json jsonData = {{name, {{"Group", ""}, {"Params", {{"Diffuse", imageName}}}}}}; //JSON Struct
+
+    fs::path jsonFilePath = m_ballTexturesFolder / fileName;
+
+    std::ofstream outFile(jsonFilePath);
+    if (outFile.is_open())
+    {
+        outFile << jsonData.dump(4);
+        outFile.close();
+        LOG("JSON file created: {}", jsonFilePath.string());
+    }
+    else
+    {
+        LOGERROR("Failed to write JSON file: {}", jsonFilePath.string());
+    }
+}
+
 void TexturesComponent::initCvars()
 {
 	// bools
@@ -618,7 +644,11 @@ void TexturesComponent::display()
 		);
 	}
 
-	GUI::Spacing(2);
+	GUI::Spacing(4);
+
+	CreateJSONdisplay(); //Added display here
+
+    GUI::Spacing(4);
 
 	uint8_t numCachedSkins = 0;
 
@@ -727,6 +757,44 @@ void TexturesComponent::display_skinDropdown()
 		ImGui::SetTooltip("Search BallTextures folder for skins\n\n(Also clears all cached textures)");
 
 	ImGui::Text("%i skins", m_savedTextureData.size());
+}
+
+// Display For IMGUI
+void TexturesComponent::CreateJSONdisplay()
+{
+    static char nameBuffer[128]      = "";
+    static char imageNameBuffer[128] = "";
+    static char fileNameBuffer[128]  = "my_ball_skin.json";
+
+    ImGui::InputText("JSON File Name", fileNameBuffer, IM_ARRAYSIZE(fileNameBuffer));
+    ImGui::InputText("Texture Name", nameBuffer, IM_ARRAYSIZE(nameBuffer));
+    ImGui::InputText("Image Name", imageNameBuffer, IM_ARRAYSIZE(imageNameBuffer));
+
+    if (ImGui::Button("Create JSON File"))
+    {
+        std::string name      = nameBuffer;
+        std::string imageName = imageNameBuffer;
+        std::string fileName  = fileNameBuffer;
+        //Add .png if ImageName without extension
+        if (!imageName.empty() && !std::filesystem::path(imageName).has_extension())
+        {
+            imageName += ".png";
+        }
+        //Add .json if FileName has no extension
+        if (!fileName.empty() && std::filesystem::path(fileName).extension() != ".json")
+        {
+            fileName += ".json";
+        }
+        //Simple verification
+        if (name.empty() || imageName.empty() || fileName.empty())
+        {
+            LOGERROR("All fields must be filled.");
+        }
+        else
+        {
+            createCustomJsonFile(name, imageName, fileName);
+        }
+    }
 }
 
 

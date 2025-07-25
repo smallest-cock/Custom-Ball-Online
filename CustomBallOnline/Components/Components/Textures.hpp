@@ -37,6 +37,7 @@ private:
 	void initHooks();
 	void initCommands();
 	void searchForBallSkins();
+	void createCustomJsonFile(const std::string& name, const std::string& imageName, const std::string& fileName);
 
 private:
 	// cvar values
@@ -74,6 +75,7 @@ public:
 	// gui
 	void display();
 	void display_skinDropdown();
+	void CreateJSONdisplay();
 };
 
 
