@@ -122,11 +122,10 @@
     <ClCompile Include="Commands.cpp" />
     <ClCompile Include="Components\Components\Instances.cpp" />
     <ClCompile Include="Components\Components\Textures.cpp" />
-    <ClCompile Include="CvarChangedCallbacks.cpp" />
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="RegisterCvars.cpp" />
-    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="SettingsGUI.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

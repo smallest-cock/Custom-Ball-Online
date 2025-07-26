@@ -3,6 +3,38 @@
 #include <regex>
 
 
+struct SkinJsonDataForImgui
+{
+	char jsonFileName[128] = "";
+	char skinName[128] = "";
+	char diffusePath[128] = "";
+	char normalPath[128] = "";
+	char maskPath[128] = "";
+
+	void clear();
+};
+
+struct SkinJsonData
+{
+	std::string jsonFileName;
+	std::string skinName;
+	std::string diffusePath;
+	std::string normalPath;
+	std::string maskPath;
+
+	SkinJsonData(const SkinJsonDataForImgui& skin) :
+		jsonFileName(skin.jsonFileName),
+		skinName(skin.skinName),
+		diffusePath(skin.diffusePath),
+		normalPath(skin.normalPath),
+		maskPath(skin.maskPath)
+	{}
+
+	bool validateData(const fs::path& ballTexFolder);
+	json toJson() const;
+};
+
+
 struct CvarTextureInfo
 {
 	fs::path jsonFile;
@@ -29,6 +61,7 @@ struct BallTextureData
 
 class TexturesComponent : Component<TexturesComponent>
 {
+friend struct BallTextureData;
 public:
 	TexturesComponent() {}
 	~TexturesComponent() {}
@@ -84,9 +117,13 @@ private:
 	void applySkinToBallArchetype(ABall_TA* arch, const BallTextureData& skin);
 	void applySkinToBallAndArchetype(ABall_TA* ball, const BallTextureData& skin);
 	void applySkinToBallDissolveMIC(const BallTextureData& skin);
+	void createSkinJsonFile(const SkinJsonDataForImgui& skin);
+
+// gui
+private:
+  void display_skinJsonCreator();
 
 public:
-	// gui
 	void display();
 };
 

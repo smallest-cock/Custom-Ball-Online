@@ -753,6 +753,34 @@ bool TexturesComponent::getImgBytes(const fs::path& imgPath, TArray<uint8_t>& ou
 	return true;
 }
 
+void TexturesComponent::createSkinJsonFile(const SkinJsonDataForImgui& skinData)
+{
+	if (!fs::exists(m_acBallTexturesFolder))
+	{
+		LOGERROR("BallTextures folder does not exist.");
+		return;
+	}
+
+	SkinJsonData skin{ skinData };
+	if (!skin.validateData(m_acBallTexturesFolder))
+		return;
+
+	json jsonData = skin.toJson();
+	fs::path jsonFilePath = m_acBallTexturesFolder / skin.jsonFileName;
+
+	std::ofstream outFile(jsonFilePath);
+	if (outFile.is_open())
+	{
+		outFile << jsonData.dump(4);
+		outFile.close();
+
+		Instances.spawnNotification("Custom Ball Online", "Successfully created JSON file", 3);
+		LOG("Successfully created JSON file: {}", jsonFilePath.string());
+	}
+	else
+		LOGERROR("Failed to write JSON file: {}", jsonFilePath.string());
+}
+
 
 
 // ##############################################################################################################
@@ -780,6 +808,21 @@ void TexturesComponent::display()
 
 	GUI::Spacing(8);
 
+	if (ImGui::Button("Open BallTextures folder"))
+		Files::OpenFolder(m_acBallTexturesFolder);
+
+	GUI::Spacing(4);
+
+	if (ImGui::CollapsingHeader("JSON creator"))
+	{
+		GUI::ScopedIndent indent{};
+		display_skinJsonCreator();
+
+		GUI::Spacing(2);
+	}
+
+	GUI::Spacing(8);
+
 	if (ImGui::Button("Clear all saved textures"))
 	{
 		GAME_THREAD_EXECUTE(
@@ -798,9 +841,8 @@ void TexturesComponent::display()
 
 	GUI::Spacing(4);
 
-	uint8_t num_saved_texture_sets = 0;
-
 	// list of saved texture info
+	uint8_t numCachedSkins = 0;
 	if (!m_textureCache.empty())
 	{
 		if (ImGui::CollapsingHeader("saved texture data"))
@@ -812,7 +854,7 @@ void TexturesComponent::display()
 			for (const auto& [textureName, tex_data] : m_textureCache)
 			{
 				if (!tex_data.textures.empty())
-					num_saved_texture_sets++;
+					numCachedSkins++;
 
 				if (ImGui::CollapsingHeader(textureName.c_str()))
 				{
@@ -837,12 +879,116 @@ void TexturesComponent::display()
 
 			GUI::Spacing(2);
 
-			ImGui::Text("Cached ball textures: %d", num_saved_texture_sets);
+			ImGui::Text("Cached ball textures: %d", numCachedSkins);
 		}
 	}
 
 	GUI::Spacing(2);
 }
+
+void TexturesComponent::display_skinJsonCreator()
+{
+	static SkinJsonDataForImgui skinData{};
+	static bool useNormalOrMask = false;
+	static constexpr auto IMG_TIP = "Image file path, relative to the BallTextures folder\n\n"
+		"If YOUR_IMAGE.png exists directly in the BallTextures folder, you can just put \"YOUR_IMAGE.png\"";
+
+	ImGui::Checkbox("Show Normal & Mask parameters", &useNormalOrMask);
+
+	GUI::Spacing(2);
+
+    ImGui::InputText("JSON file name", skinData.jsonFileName, IM_ARRAYSIZE(skinData.jsonFileName));
+    ImGui::InputText("Ball skin name",  skinData.skinName, IM_ARRAYSIZE(skinData.skinName));
+    ImGui::InputText("Diffuse image", skinData.diffusePath, IM_ARRAYSIZE(skinData.diffusePath));
+	GUI::ToolTip(IMG_TIP);
+
+	if (useNormalOrMask)
+	{
+		ImGui::InputText("Normal image", skinData.normalPath, IM_ARRAYSIZE(skinData.normalPath));
+		GUI::ToolTip(IMG_TIP);
+		ImGui::InputText("Mask image", skinData.maskPath, IM_ARRAYSIZE(skinData.maskPath));
+		GUI::ToolTip(IMG_TIP);
+	}
+
+	GUI::Spacing(2);
+
+    if (ImGui::Button("Create JSON file"))
+    {
+		GAME_THREAD_EXECUTE(
+			createSkinJsonFile(skinData);
+		);
+    }
+
+	GUI::SameLineSpacing_relative(10.0f);
+
+	if (ImGui::Button("Clear"))
+		skinData.clear();
+}
+
+
+
+// ##############################################################################################################
+// #########################################    STRUCT FUNCTIONS    #############################################
+// ##############################################################################################################
+
+void SkinJsonDataForImgui::clear()
+{
+	std::memset(this, 0, sizeof(*this)); // works bc all data members are POD char arrays
+}
+
+bool SkinJsonData::validateData(const fs::path& ballTexFolder)
+{
+	if (jsonFileName.empty() ||
+		skinName.empty() ||
+		(diffusePath.empty() && normalPath.empty() && maskPath.empty()))
+	{
+		Instances.spawnNotification("Custom Ball Online", "ERROR: Missing required fields", 5, true);
+		return false;
+	}
+
+	if (!jsonFileName.ends_with(".json"))
+	{
+		jsonFileName += ".json";
+		LOG("Added \".json\" to file name...");
+	}
+
+	const std::string* paths[] = { &diffusePath, &normalPath, &maskPath };
+	for (const std::string* path : paths)
+	{
+		if (path->empty())
+			continue;
+
+		// resolve full path
+		fs::path fullImgPath = ballTexFolder / *path;
+		fullImgPath = fs::weakly_canonical(fullImgPath);
+
+		if (!fs::exists(fullImgPath))
+		{
+			std::string msg = std::format("ERROR: Image doesn't exist: \"{}\"", fullImgPath.string());
+			Instances.spawnNotification("Custom Ball Online", msg, 5, true);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+json SkinJsonData::toJson() const
+{
+	json j;
+
+	j[skinName]["Group"] = ""; // "Group" key/val aint used in this mod, but we can still add it to make JSON compatible w AC
+
+	if (!diffusePath.empty())
+		j[skinName]["Params"]["Diffuse"] = diffusePath;
+	if (!normalPath.empty())
+		j[skinName]["Params"]["Normal"] = normalPath;
+	if (!maskPath.empty())
+		j[skinName]["Params"]["Mask"] = maskPath;
+
+	return j;
+}
+
 
 
 class TexturesComponent Textures{};
