@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.2.2
+- Added a basic JSON creator tool in settings
+  - Should help beginners who don't know how to create JSON files for their skins
+  - Thanks to @GsRClans for the idea & initial implemention 👐🦒
+
 ## v2.2.1
 - Automated the release process 👷
   - Will probably lead to faster updates in the future 🥳
