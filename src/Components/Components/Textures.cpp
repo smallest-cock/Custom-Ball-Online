@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Textures.hpp"
+#include "Events.hpp"
+#include "Macros.hpp"
 
 
 // ##############################################################################################################
@@ -687,7 +689,7 @@ void TexturesComponent::display()
 						GUI::ScopedID id{&texData};
 
 						std::string txt = std::format("{}:\t{}", paramName, texData.imgPath.string());
-						ImGui::Text(txt.c_str());
+						ImGui::Text("%s", txt.c_str());
 
 						GUI::SameLineSpacing_relative(20);
 
@@ -765,7 +767,7 @@ void TexturesComponent::display_skinDropdown()
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Search BallTextures folder for skins\n\n(Also clears all cached textures)");
 
-	ImGui::Text("%i skins", m_savedTextureData.size());
+	ImGui::Text("%zu skins", m_savedTextureData.size());
 }
 
 void TexturesComponent::display_skinJsonCreator()

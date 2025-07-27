@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CustomBallOnline.h"
+#include "Components/Components/Textures.hpp"
 
 
 BAKKESMOD_PLUGIN(CustomBallOnline, "Custom Ball Online", plugin_version, PLUGINTYPE_FREEPLAY)

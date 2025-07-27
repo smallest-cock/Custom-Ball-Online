@@ -5,7 +5,7 @@
 #include <format>
 #include <memory>
 
-#include "bakkesmod/wrappers/cvarmanagerwrapper.h"
+#include "bakkesmod/wrappers/CVarManagerWrapper.h"
 
 extern std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 constexpr bool DEBUG_LOG = false;

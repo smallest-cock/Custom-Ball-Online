@@ -2,16 +2,11 @@
 #include "pch.h"
 #include "GuiBase.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
-#include "bakkesmod/plugin/pluginwindow.h"
-#include "bakkesmod/plugin/PluginSettingsWindow.h"
 
 #include "version.h"
 
-#include "Macros.hpp"
-#include "Events.hpp"
 #include "Cvars.hpp"
 #include <ModUtils/includes.hpp>
-#include "Components/Includes.hpp"
 
 
 constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
