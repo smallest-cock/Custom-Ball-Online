@@ -73,6 +73,9 @@ jobs:
             - name: 🪟 Set up MSVC
               uses: ilammy/msvc-dev-cmd@v1
 
+            - name: ⚙️ Set up CMake
+              uses: jwlawson/actions-setup-cmake@v1
+
             - name: 🥷 Set up Ninja
               uses: seanmiddleditch/gha-setup-ninja@v3
 
