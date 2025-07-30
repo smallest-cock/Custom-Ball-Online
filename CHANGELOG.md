@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.2.3
+- Updated internal SDK to match latest RL update (v2.54)
+
 ## v2.2.2
 - Added a basic JSON creator tool in settings
   - Should help beginners who don't know how to create JSON files for their skins
