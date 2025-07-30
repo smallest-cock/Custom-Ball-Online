@@ -83,11 +83,13 @@ uintptr_t InstancesComponent::GetGObjectsAddress()
 	return GetGNamesAddress() + 0x48;
 }
 
-void InstancesComponent::InitGlobals()
+bool InstancesComponent::InitGlobals()
 {
 	uintptr_t gnamesAddr = GetGNamesAddress();
-	GNames               = reinterpret_cast<TArray<FNameEntry*>*>(gnamesAddr);
-	GObjects             = reinterpret_cast<TArray<UObject*>*>(gnamesAddr + 0x48);
+	GNames = reinterpret_cast<TArray<FNameEntry*>*>(gnamesAddr);
+	GObjects = reinterpret_cast<TArray<UObject*>*>(gnamesAddr + 0x48);
+
+	return CheckGlobals();
 }
 
 bool InstancesComponent::AreGObjectsValid()
@@ -114,7 +116,7 @@ bool InstancesComponent::CheckGlobals()
 {
 	bool gnamesValid   = GNames && AreGNamesValid();
 	bool gobjectsValid = GObjects && AreGObjectsValid();
-	if (!gnamesValid || !gobjectsValid)
+	if (!(gnamesValid && gobjectsValid))
 	{
 		LOG("(onLoad) Error: RLSDK classes are wrong... plugin needs an update :(");
 		LOG(std::format("GNames valid: {} -- GObjects valid: {}", gnamesValid, gobjectsValid));

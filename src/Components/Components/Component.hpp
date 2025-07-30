@@ -1,6 +1,4 @@
 #pragma once
-#include "Macros.hpp"
-#include "Events.hpp"
 #include "Cvars.hpp"
 #include <ModUtils/wrappers/GFxWrapper.hpp>
 

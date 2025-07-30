@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CustomBallOnline.h"
+#include "Components/Components/Textures.hpp"
 
 
 BAKKESMOD_PLUGIN(CustomBallOnline, "Custom Ball Online", plugin_version, PLUGINTYPE_FREEPLAY)
@@ -10,10 +11,7 @@ void CustomBallOnline::onLoad()
 {
 	_globalCvarManager = cvarManager;
 
-
-	// init globals
-	Instances.InitGlobals();
-	if (!Instances.CheckGlobals())
+	if (!Instances.InitGlobals())
 		return;
 
 	Format::construct_label({ 41,11,20,6,8,13,52,12,0,3,4,52,1,24,52,44,44,37,14,22 }, h_label);

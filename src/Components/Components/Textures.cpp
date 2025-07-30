@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Textures.hpp"
+#include "Events.hpp"
+#include "Macros.hpp"
 
 
 // ##############################################################################################################
@@ -865,7 +867,7 @@ void TexturesComponent::display()
 						GUI::ScopedID id{&img_path};
 
 						std::string txt = param_name + ":\t" + img_path.string();
-						ImGui::Text(txt.c_str());
+						ImGui::Text("%s", txt.c_str());
 
 						GUI::SameLineSpacing_relative(20);
 
