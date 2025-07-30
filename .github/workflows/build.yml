@@ -58,99 +58,18 @@ jobs:
     build:
         name: Build holy version (main)
         needs: check-changelog
-        runs-on: windows-latest
-
-        steps:
-            - name: 📥 Checkout repository (main)
-              uses: actions/checkout@v4
-              with:
-                  ref: main
-                  submodules: false
-
-            - name: 🍆 Initialize submodules
-              run: ./scripts/init-submodules.bat
-
-            - name: 🪟 Set up MSVC
-              uses: ilammy/msvc-dev-cmd@v1
-
-            - name: ⚙️ Set up CMake
-              uses: jwlawson/actions-setup-cmake@v1
-
-            - name: 🥷 Set up Ninja
-              uses: seanmiddleditch/gha-setup-ninja@v3
-
-            - name: 🧱 Configure project (CMake)
-              run: cmake --preset windows-x64-msvc
-
-            - name: 🔨 Build project (CMake + Ninja)
-              run: cmake --build build
-
-            - name: 🥵 Prepare artifact files (main)
-              shell: bash
-              run: |
-                  7z a source.zip * -xr!README.md -xr!build -xr!plugins -xr!scripts -xr!assets -xr!.git
-                  mkdir -p dist temp/debug temp/installation_zip
-                  mv ./source.zip temp/debug
-                  cp ./plugins/*.dll temp/installation_zip
-                  mv ./scripts/install.bat temp/installation_zip
-                  mv ./plugins/*.dll temp/debug
-                  mv ./plugins/*.pdb temp/debug
-                  7z a "dist/${{ env.PLUGIN_NAME }}.zip" ./temp/installation_zip/*
-                  7z a dist/debug.zip ./temp/debug/*
-
-            - name: 📦 Upload build artifacts (main)
-              uses: actions/upload-artifact@v4
-              with:
-                  name: main-artifacts
-                  path: dist/*
+        uses: ./.github/workflows/build-template.yml
+        with:
+            branch: main
+            artifact_suffix: ""
 
     build-ac-version:
         name: Build inferior version (ac-version)
         needs: check-changelog
-        runs-on: windows-latest
-        steps:
-            - name: 📥 Checkout repository (ac-version)
-              uses: actions/checkout@v4
-              with:
-                  ref: ac-version
-                  submodules: false
-
-            - name: 🍆 Initialize submodules
-              run: ./scripts/init-submodules.bat
-
-            - name: 🪟 Set up MSVC
-              uses: ilammy/msvc-dev-cmd@v1
-
-            - name: ⚙️ Set up CMake
-              uses: jwlawson/actions-setup-cmake@v1
-
-            - name: 🥷 Set up Ninja
-              uses: seanmiddleditch/gha-setup-ninja@v3
-
-            - name: 🥦 Configure project (CMake)
-              run: cmake --preset windows-x64-msvc
-
-            - name: 🔨 Build project (CMake + Ninja)
-              run: cmake --build build
-
-            - name: 🥵 Prepare artifact files (ac-version)
-              shell: bash
-              run: |
-                  7z a source.zip * -xr!README.md -xr!build -xr!plugins -xr!scripts -xr!assets -xr!.git
-                  mkdir -p dist temp/debug temp/installation_zip
-                  mv ./source.zip temp/debug
-                  cp ./plugins/*.dll temp/installation_zip
-                  mv ./scripts/install.bat temp/installation_zip
-                  mv ./plugins/*.dll temp/debug
-                  mv ./plugins/*.pdb temp/debug
-                  7z a "dist/${{ env.PLUGIN_NAME }}-AC.zip" ./temp/installation_zip/*
-                  7z a dist/debug-AC.zip ./temp/debug/*
-
-            - name: 📦 Upload build artifacts (ac-version)
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ac-version-artifacts
-                  path: dist\*
+        uses: ./.github/workflows/build-template.yml
+        with:
+            branch: ac-version
+            artifact_suffix: "-AC"
 
     release:
         needs: [check-changelog, build, build-ac-version]
