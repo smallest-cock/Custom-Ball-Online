@@ -74,7 +74,7 @@ jobs:
               uses: ilammy/msvc-dev-cmd@v1
 
             - name: 🥷 Set up Ninja
-              uses: ashutoshvarma/setup-ninja@v1
+              uses: seanmiddleditch/gha-setup-ninja@v3
 
             - name: 🧱 Configure project (CMake)
               run: cmake --preset windows-x64-msvc
