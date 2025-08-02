@@ -46,7 +46,7 @@ jobs:
             - name: 🥵 Prepare artifact files (${{ inputs.artifact_suffix }})
               shell: bash
               run: |
-                  7z a source.zip * -xr!README.md -xr!build -xr!plugins -xr!scripts -xr!assets -xr!.git
+                  7z a source.zip * -xr!README.md -xr!build -xr!plugins -xr!ninja-build -xr!scripts -xr!assets -xr!.git
                   mkdir -p dist temp/debug temp/installation_zip
                   mv ./source.zip temp/debug
                   cp ./plugins/*.dll temp/installation_zip
