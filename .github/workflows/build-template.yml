@@ -59,5 +59,5 @@ jobs:
             - name: 📦 Upload build artifacts (${{ inputs.artifact_suffix }})
               uses: actions/upload-artifact@v4
               with:
-                  name: artifacts
+                  name: artifacts${{ inputs.artifact_suffix }}
                   path: dist/*
