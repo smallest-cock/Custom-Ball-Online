@@ -548,40 +548,31 @@ bool TexturesComponent::getImgBytes(const fs::path& imgPath, TArray<uint8_t>& ou
 
 void TexturesComponent::clearCreatedTextures()
 {
+	int numSkinsCleared = 0;
 	for (auto& [name, skin] : m_savedTextureData)
 	{
-		// mark all textures to be destroyed by GC
-		for (auto& [param_name, tex] : skin.paramTextures)
-			Instances.SimpleMarkForDestroy(tex.texture);
-
-		// clear shit
-		skin.paramTextures.clear();
-		skin.bTexturesLoaded = false;
+		skin.clearLoadedTextures();
+		numSkinsCleared++;
 	}
+
+	if (numSkinsCleared > 0)
+		LOG("Cleared textures for {} skins", numSkinsCleared);
 }
 
 void TexturesComponent::clearUnusedCreatedTextures()
 {
-	BallSkinData currentSkin{};
-	bool         currentSkinFound = false;
-
+	int numSkinsCleared = 0;
 	for (auto& [name, skin] : m_savedTextureData)
 	{
 		if (name == *m_selectedTextureStr)
-		{
-			currentSkin      = skin;
-			currentSkinFound = true;
 			continue;
-		}
 
-		// mark all textures to be destroyed by GC
-		for (auto& [param_name, tex] : skin.paramTextures)
-			Instances.SimpleMarkForDestroy(tex.texture);
+		skin.clearLoadedTextures();
+		numSkinsCleared++;
 	}
 
-	m_savedTextureData.clear();
-	if (currentSkinFound)
-		m_savedTextureData[*m_selectedTextureStr] = currentSkin;
+	if (numSkinsCleared > 0)
+		LOG("Cleared textures for {} unused skins", numSkinsCleared);
 }
 
 void TexturesComponent::createSkinJsonFile(const SkinJsonDataForImgui& skinData)
