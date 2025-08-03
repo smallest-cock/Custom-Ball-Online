@@ -2,6 +2,7 @@
 
 ## v2.2.4
 - Added potential fix for crashes
+- Fixed bug causing skins to disappear from settings dropdown when their cached textures are cleared on loading screens
 
 ## v2.2.3
 - Updated internal SDK to match latest RL update (v2.54)
