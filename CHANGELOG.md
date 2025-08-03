@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.2.4
+- Added potential fix for crashes
+
 ## v2.2.3
 - Updated internal SDK to match latest RL update (v2.54)
 
