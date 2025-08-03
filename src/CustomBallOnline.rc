@@ -78,7 +78,7 @@ BEGIN
     BEGIN
         BLOCK "041404b0"
         BEGIN
-            VALUE "CompanyName", "Open AI"
+            VALUE "CompanyName", "Apple"
             VALUE "FileDescription", "BakkedMod plugin"
             VALUE "FileVersion", stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD)
             VALUE "InternalName", "CustomBallOnline.dll"

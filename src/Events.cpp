@@ -1,8 +1,4 @@
 #include "pch.h"
-#include "CustomBallOnline.h"
+#include "CustomBallOnline.hpp"
 
-
-void CustomBallOnline::initHooks()
-{
-	
-}
+void CustomBallOnline::initHooks() {}

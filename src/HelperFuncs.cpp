@@ -1,6 +1,5 @@
 #include "pch.h"
-#include "CustomBallOnline.h"
-
+#include "CustomBallOnline.hpp"
 
 // cvars
 CVarWrapper CustomBallOnline::registerCvar_Bool(const CvarData& cvar, bool startingValue)
@@ -20,13 +19,9 @@ CVarWrapper CustomBallOnline::registerCvar_Number(const CvarData& cvar, float st
 	std::string numberStr = std::to_string(startingValue);
 
 	if (hasMinMax)
-	{
 		return cvarManager->registerCvar(cvar.name, numberStr, cvar.description, true, true, min, true, max);
-	}
 	else
-	{
 		return cvarManager->registerCvar(cvar.name, numberStr, cvar.description);
-	}
 }
 
 CVarWrapper CustomBallOnline::registerCvar_Color(const CvarData& cvar, const std::string& startingValue)
@@ -39,23 +34,15 @@ void CustomBallOnline::registerCommand(const CvarData& cvar, std::function<void(
 	cvarManager->registerNotifier(cvar.name, callback, cvar.description, PERMISSION_ALL);
 }
 
-CVarWrapper CustomBallOnline::getCvar(const CvarData& cvar)
-{
-	return cvarManager->getCvar(cvar.name);
-}
-
+CVarWrapper CustomBallOnline::getCvar(const CvarData& cvar) { return cvarManager->getCvar(cvar.name); }
 
 // commands
 void CustomBallOnline::runCommand(const CvarData& command, float delaySeconds)
 {
 	if (delaySeconds == 0)
-	{
 		cvarManager->executeCommand(command.name);
-	}
 	else if (delaySeconds > 0)
-	{
 		gameWrapper->SetTimeout([this, command](GameWrapper* gw) { cvarManager->executeCommand(command.name); }, delaySeconds);
-	}
 }
 
 void CustomBallOnline::runCommandInterval(const CvarData& command, int numIntervals, float delaySeconds, bool delayFirstCommand)
@@ -67,9 +54,7 @@ void CustomBallOnline::runCommandInterval(const CvarData& command, int numInterv
 	}
 
 	for (int i = 1; i <= numIntervals; i++)
-	{
 		runCommand(command, delaySeconds * i);
-	}
 }
 
 void CustomBallOnline::autoRunCommand(const CvarData& autoRunBool, const CvarData& command, float delaySeconds)
@@ -82,7 +67,7 @@ void CustomBallOnline::autoRunCommand(const CvarData& autoRunBool, const CvarDat
 }
 
 void CustomBallOnline::autoRunCommandInterval(
-	const CvarData& autoRunBool, const CvarData& command, int numIntervals, float delaySeconds, bool delayFirstCommand)
+    const CvarData& autoRunBool, const CvarData& command, int numIntervals, float delaySeconds, bool delayFirstCommand)
 {
 	auto autoRunBool_cvar = getCvar(autoRunBool);
 	if (!autoRunBool_cvar || !autoRunBool_cvar.getBoolValue())
@@ -90,7 +75,6 @@ void CustomBallOnline::autoRunCommandInterval(
 
 	runCommandInterval(command, numIntervals, delaySeconds, delayFirstCommand);
 }
-
 
 // hooks
 void CustomBallOnline::hookEvent(const char* funcName, std::function<void(std::string)> callback)
