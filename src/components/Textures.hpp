@@ -2,14 +2,13 @@
 #include "Component.hpp"
 #include <regex>
 
-
 struct SkinJsonDataForImgui
 {
 	char jsonFileName[128] = "";
-	char skinName[128] = "";
-	char diffusePath[128] = "";
-	char normalPath[128] = "";
-	char maskPath[128] = "";
+	char skinName[128]     = "";
+	char diffusePath[128]  = "";
+	char normalPath[128]   = "";
+	char maskPath[128]     = "";
 
 	void clear();
 };
@@ -22,30 +21,27 @@ struct SkinJsonData
 	std::string normalPath;
 	std::string maskPath;
 
-	SkinJsonData(const SkinJsonDataForImgui& skin) :
-		jsonFileName(skin.jsonFileName),
-		skinName(skin.skinName),
-		diffusePath(skin.diffusePath),
-		normalPath(skin.normalPath),
-		maskPath(skin.maskPath)
-	{}
+	SkinJsonData(const SkinJsonDataForImgui& skin)
+	    : jsonFileName(skin.jsonFileName), skinName(skin.skinName), diffusePath(skin.diffusePath), normalPath(skin.normalPath),
+	      maskPath(skin.maskPath)
+	{
+	}
 
 	bool validateData(const fs::path& ballTexFolder);
 	json toJson() const;
 };
 
-
 struct CvarTextureInfo
 {
-	fs::path jsonFile;
+	fs::path    jsonFile;
 	std::string textureName;
 };
 
 struct BallTextureData
 {
-	CvarTextureInfo cvarTextureInfo;
-	std::unordered_map<std::string, fs::path> imgPaths;				// img_paths[param_name] ---> C:\users\.....\texture_image.jpg
-	std::unordered_map<std::string, UTexture2DDynamic*> textures;	// textures[param_name]	---> UTexture2DDynamic*
+	CvarTextureInfo                                     cvarTextureInfo;
+	std::unordered_map<std::string, fs::path>           imgPaths; // img_paths[param_name] ---> C:\users\.....\texture_image.jpg
+	std::unordered_map<std::string, UTexture2DDynamic*> textures; // textures[param_name]	---> UTexture2DDynamic*
 
 	std::string getImgExtension(const std::string& param_name)
 	{
@@ -58,16 +54,16 @@ struct BallTextureData
 	}
 };
 
-
 class TexturesComponent : Component<TexturesComponent>
 {
-friend struct BallTextureData;
+	friend struct BallTextureData;
+
 public:
 	TexturesComponent() {}
 	~TexturesComponent() {}
 
 	static constexpr std::string_view componentName = "Textures";
-	void initialize(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag);
+	void                              initialize(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag);
 
 private:
 	void initPaths();
@@ -86,29 +82,31 @@ private:
 	bool m_currentlyApplyingTexture = false;
 
 	// values
-	fs::path m_acBallTexturesFolder;
+	fs::path                                         m_acBallTexturesFolder;
 	std::unordered_map<std::string, BallTextureData> m_textureCache;
-	UMaterialInstanceConstant* m_ballDissolveMIC = nullptr;
+	// UMaterialInstanceConstant* m_ballDissolveMIC = nullptr;
 
-	static constexpr auto AC_CVAR_REGEX_PATTERN = R"((.+\.json) - (.+))";
+	static constexpr auto          AC_CVAR_REGEX_PATTERN = R"((.+\.json) - (.+))";
 	inline static const std::regex cvarRegex{AC_CVAR_REGEX_PATTERN};
 
 private:
 	// old existing funcs
 	std::optional<json> getJsonFromFile(const std::string& key, const fs::path& jsonFile);
-	fs::path getImgPath(const std::string& acSelectedTextureStr, const std::string& paramName);
-	bool getInfoFromCvarStr(const std::string& acSelectedTextureStr, CvarTextureInfo& outCvarInfo);
-	void handleSetTexParamValue(UMaterialInstance* mi, UMaterialInterface* parent, UMaterialInstance_execSetTextureParameterValue_Params* params);
+	fs::path            getImgPath(const std::string& acSelectedTextureStr, const std::string& paramName);
+	bool                getInfoFromCvarStr(const std::string& acSelectedTextureStr, CvarTextureInfo& outCvarInfo);
+
+	void handleSetTexParamValue(
+	    UMaterialInstance* mi, UMaterialInterface* parent, UMaterialInstance_execSetTextureParameterValue_Params* params);
 	void clearSavedTextures(bool onlyClearActualTextures = true);
 	void clearUnusedSavedTextures(const std::string& currentACTexName, bool onlyClearActualTextures = true);
 
-	static void loadTexturesForExistingData(BallTextureData& data, bool forceNewTextures = false);
+	static void               loadTexturesForExistingData(BallTextureData& data, bool forceNewTextures = false);
 	static UTexture2DDynamic* imgPathToTexture(const fs::path& imagePath, bool markInvincible = true);
 	static bool               getImgBytes(const fs::path& imagePath, TArray<uint8_t>& outBytes);
-	
+
 	// new funcs
-	BallTextureData* getAcSelectedTex(bool loadTextures = true);
-	void             updateBallDissolveMIC();
+	BallTextureData*           getAcSelectedTex(bool loadTextures = true);
+	UMaterialInstanceConstant* getBallDissolveMIC();
 
 	bool createBallTexData(const std::string& acSelectedTexStr, bool loadTextures);
 
@@ -119,13 +117,12 @@ private:
 	void applySkinToBallDissolveMIC(const BallTextureData& skin);
 	void createSkinJsonFile(const SkinJsonDataForImgui& skin);
 
-// gui
+	// gui
 private:
-  void display_skinJsonCreator();
+	void display_skinJsonCreator();
 
 public:
 	void display();
 };
-
 
 extern class TexturesComponent Textures;

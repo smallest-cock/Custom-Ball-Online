@@ -27,7 +27,7 @@ set(compile_options
 )
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
-set(COMPONENTS_DIR "${SRC_DIR}/Components/Components")
+set(COMPONENTS_DIR "${SRC_DIR}/components")
 set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/external")
 
 set(BMSDK_DIR "${EXTERNAL_DIR}/BMSDK")

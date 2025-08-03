@@ -1,15 +1,14 @@
 #include "pch.h"
-#include "CustomBallOnline.h"
-#include "Components/Components/Textures.hpp"
-
+#include "CustomBallOnline.hpp"
+#include "components/Textures.hpp"
 
 void CustomBallOnline::RenderSettings()
 {
-    auto enabled_cvar = getCvar(Cvars::enabled);
-    if (!enabled_cvar)
+	auto enabled_cvar = getCvar(Cvars::enabled);
+	if (!enabled_cvar)
 		return;
 
-	const float content_height = ImGui::GetContentRegionAvail().y - FOOTER_HEIGHT;	// available height after accounting for footer
+	const float content_height = ImGui::GetContentRegionAvail().y - FOOTER_HEIGHT; // available height after accounting for footer
 	{
 		GUI::ScopedChild c{"PluginSettingsSection", ImVec2(0, content_height)};
 

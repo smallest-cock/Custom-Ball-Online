@@ -1,11 +1,10 @@
 #include "pch.h"
-#include "CustomBallOnline.h"
-#include "Components/Components/Textures.hpp"
-
+#include "CustomBallOnline.hpp"
+#include "components/Instances.hpp"
+#include "components/Textures.hpp"
 
 BAKKESMOD_PLUGIN(CustomBallOnline, "Custom Ball Online", plugin_version, PLUGINTYPE_FREEPLAY)
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-
 
 void CustomBallOnline::onLoad()
 {
@@ -14,7 +13,7 @@ void CustomBallOnline::onLoad()
 	if (!Instances.InitGlobals())
 		return;
 
-	Format::construct_label({ 41,11,20,6,8,13,52,12,0,3,4,52,1,24,52,44,44,37,14,22 }, h_label);
+	Format::construct_label({41, 11, 20, 6, 8, 13, 52, 12, 0, 3, 4, 52, 1, 24, 52, 44, 44, 37, 14, 22}, h_label);
 	PluginUpdates::check_for_updates(stringify_(CustomBallOnline), short_plugin_version);
 
 	Textures.initialize(gameWrapper, m_enabled);
@@ -27,7 +26,6 @@ void CustomBallOnline::onLoad()
 
 	LOG("Custom Ball Online has loaded :)");
 }
-
 
 void CustomBallOnline::initCvars()
 {
