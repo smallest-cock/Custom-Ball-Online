@@ -1,16 +1,9 @@
 #include "pch.h"
 #include "Instances.hpp"
 
+InstancesComponent::InstancesComponent() { OnCreate(); }
 
-InstancesComponent::InstancesComponent()
-{
-	OnCreate();
-}
-
-InstancesComponent::~InstancesComponent()
-{
-	OnDestroy();
-}
+InstancesComponent::~InstancesComponent() { OnDestroy(); }
 
 void InstancesComponent::OnCreate()
 {
@@ -78,10 +71,7 @@ uintptr_t InstancesComponent::GetGNamesAddress()
 	return GNamesAddress;
 }
 
-uintptr_t InstancesComponent::GetGObjectsAddress()
-{
-	return GetGNamesAddress() + 0x48;
-}
+uintptr_t InstancesComponent::GetGObjectsAddress() { return GetGNamesAddress() + 0x48; }
 
 void InstancesComponent::InitGlobals()
 {
@@ -219,40 +209,19 @@ void InstancesComponent::SimpleMarkForDestroy(class UObject* object)
 	object->ObjectFlags &= ~EObjectFlags::RF_RootSet;
 }
 
-class UEngine* InstancesComponent::IUEngine()
-{
-	return UEngine::GetEngine();
-}
+class UEngine* InstancesComponent::IUEngine() { return UEngine::GetEngine(); }
 
-class UAudioDevice* InstancesComponent::IUAudioDevice()
-{
-	return UEngine::GetAudioDevice();
-}
+class UAudioDevice* InstancesComponent::IUAudioDevice() { return UEngine::GetAudioDevice(); }
 
-class AWorldInfo* InstancesComponent::IAWorldInfo()
-{
-	return UEngine::GetCurrentWorldInfo();
-}
+class AWorldInfo* InstancesComponent::IAWorldInfo() { return UEngine::GetCurrentWorldInfo(); }
 
-class UCanvas* InstancesComponent::IUCanvas()
-{
-	return I_UCanvas;
-}
+class UCanvas* InstancesComponent::IUCanvas() { return I_UCanvas; }
 
-class AHUD* InstancesComponent::IAHUD()
-{
-	return I_AHUD;
-}
+class AHUD* InstancesComponent::IAHUD() { return I_AHUD; }
 
-class UFileSystem* InstancesComponent::IUFileSystem()
-{
-	return reinterpret_cast<UFileSystem*>(UFileSystem::StaticClass());
-}
+class UFileSystem* InstancesComponent::IUFileSystem() { return reinterpret_cast<UFileSystem*>(UFileSystem::StaticClass()); }
 
-class UGameViewportClient* InstancesComponent::IUGameViewportClient()
-{
-	return I_UGameViewportClient;
-}
+class UGameViewportClient* InstancesComponent::IUGameViewportClient() { return I_UGameViewportClient; }
 
 class ULocalPlayer* InstancesComponent::IULocalPlayer()
 {
@@ -266,10 +235,7 @@ class ULocalPlayer* InstancesComponent::IULocalPlayer()
 	return nullptr;
 }
 
-class APlayerController* InstancesComponent::IAPlayerController()
-{
-	return I_APlayerController;
-}
+class APlayerController* InstancesComponent::IAPlayerController() { return I_APlayerController; }
 
 struct FUniqueNetId InstancesComponent::GetUniqueID()
 {
@@ -412,5 +378,4 @@ void InstancesComponent::spawnNotification(const std::string& title, const std::
 		LOG("[{}] {}", title.c_str(), content.c_str());
 }
 
-
-class InstancesComponent Instances {};
+class InstancesComponent Instances{};

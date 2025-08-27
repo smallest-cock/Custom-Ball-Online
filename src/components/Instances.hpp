@@ -2,7 +2,6 @@
 #include "pch.h"
 #include <ModUtils/util/Utils.hpp>
 
-
 static constexpr int32_t INSTANCES_INTERATE_OFFSET = 10;
 
 template <typename T>
@@ -36,8 +35,7 @@ private:
 
 public:
 	// Get the default constructor of a class type. Example: UGameData_TA* gameData = GetDefaultInstanceOf<UGameData_TA>();
-	template <UObjectOrDerived T>
-	T* GetDefaultInstanceOf()
+	template <UObjectOrDerived T> T* GetDefaultInstanceOf()
 	{
 		for (int32_t i = 0; i < (UObject::GObjObjects()->size() - INSTANCES_INTERATE_OFFSET); ++i)
 		{
@@ -53,8 +51,7 @@ public:
 	}
 
 	// Get the most current/active instance of a class. Example: UEngine* engine = GetInstanceOf<UEngine>();
-	template <UObjectOrDerived T>
-	T* GetInstanceOf(bool omitDefaultsAndArchetypes = true)
+	template <UObjectOrDerived T> T* GetInstanceOf(bool omitDefaultsAndArchetypes = true)
 	{
 		for (int32_t i = (UObject::GObjObjects()->size() - INSTANCES_INTERATE_OFFSET); i > 0; --i)
 		{
@@ -73,8 +70,7 @@ public:
 
 	// Get the most current/active instance of a class, if one isn't found it creates a new instance. Example: UEngine* engine =
 	// GetInstanceOf<UEngine>();
-	template <UObjectOrDerived T>
-	T* GetOrCreateInstance()
+	template <UObjectOrDerived T> T* GetOrCreateInstance()
 	{
 		for (int32_t i = (UObject::GObjObjects()->size() - INSTANCES_INTERATE_OFFSET); i > 0; --i)
 		{
@@ -83,7 +79,7 @@ public:
 			{
 				// if (uObject->GetFullName().find("Default__") == std::string::npos)
 				if (CheckNotInName(uObject, "Default") && CheckNotInName(uObject, "Archetype") &&
-					CheckNotInName(uObject, "PostGameLobby") && CheckNotInName(uObject, "Test"))
+				    CheckNotInName(uObject, "PostGameLobby") && CheckNotInName(uObject, "Test"))
 				{
 					return static_cast<T*>(uObject);
 				}
@@ -93,8 +89,7 @@ public:
 		return CreateInstance<T>();
 	}
 
-	template <UObjectOrDerived T>
-	std::vector<T*> GetAllArchetypeInstancesOf()
+	template <UObjectOrDerived T> std::vector<T*> GetAllArchetypeInstancesOf()
 	{
 		std::vector<T*> objectInstances;
 
@@ -114,8 +109,7 @@ public:
 	}
 
 	// Get all active instances of a class type. Example: std::vector<APawn*> pawns = GetAllInstancesOf<APawn>();
-	template <UObjectOrDerived T>
-	std::vector<T*> GetAllInstancesOf(bool omitDefaultsAndArchetypes = true)
+	template <UObjectOrDerived T> std::vector<T*> GetAllInstancesOf(bool omitDefaultsAndArchetypes = true)
 	{
 		std::vector<T*> objectInstances;
 
@@ -135,8 +129,7 @@ public:
 	}
 
 	// Get all default instances of a class type.
-	template <UObjectOrDerived T>
-	std::vector<T*> GetAllDefaultInstancesOf()
+	template <UObjectOrDerived T> std::vector<T*> GetAllDefaultInstancesOf()
 	{
 		std::vector<T*> objectInstances;
 
@@ -156,29 +149,24 @@ public:
 	}
 
 	// Get an object instance by it's name and class type. Example: UTexture2D* texture = FindObject<UTexture2D>("WhiteSquare");
-	template <UObjectOrDerived T>
-	T* FindObject(const std::string& objectName, bool bStrictFind = false)
+	template <UObjectOrDerived T> T* FindObject(const std::string& objectName, bool bStrictFind = false)
 	{
-		for (int32_t i = (UObject::GObjObjects()->size() - INSTANCES_INTERATE_OFFSET); i > 0; i--)
+		const std::string objNameLower = Format::ToLower(objectName);
+		for (int32_t i = (UObject::GObjObjects()->size() - INSTANCES_INTERATE_OFFSET); i > 0; --i)
 		{
 			UObject* uObject = UObject::GObjObjects()->at(i);
+			if (!uObject || !uObject->IsA<T>())
+				continue;
 
-			if (uObject && uObject->IsA<T>())
+			std::string objectFullNameLower = Format::ToLower(uObject->GetFullName());
+
+			if (bStrictFind)
 			{
-				std::string objectFullName = uObject->GetFullName();
-
-				if (bStrictFind)
-				{
-					if (objectFullName == objectName)
-					{
-						return static_cast<T*>(uObject);
-					}
-				}
-				else if (objectFullName.find(objectName) != std::string::npos)
-				{
+				if (objectFullNameLower == objNameLower)
 					return static_cast<T*>(uObject);
-				}
 			}
+			else if (objectFullNameLower.find(objNameLower) != std::string::npos)
+				return static_cast<T*>(uObject);
 		}
 
 		return nullptr;
@@ -186,8 +174,7 @@ public:
 
 	// Get all object instances by it's name and class type. Example: std::vector<UTexture2D*> textures =
 	// FindAllObjects<UTexture2D>("Noise");
-	template <UObjectOrDerived T>
-	std::vector<T*> FindAllObjects(const std::string& objectName)
+	template <UObjectOrDerived T> std::vector<T*> FindAllObjects(const std::string& objectName)
 	{
 		std::vector<T*> objectInstances;
 
@@ -257,8 +244,7 @@ public:
 	// Creates a new transient instance of a class which then adds it to globals.
 	// YOU are required to make sure these objects eventually get eaten up by the garbage collector in some shape or form.
 	// Example: UObject* newObject = CreateInstance<UObject>();
-	template <UObjectOrDerived T>
-	T* CreateInstance()
+	template <UObjectOrDerived T> T* CreateInstance()
 	{
 		T* returnObject = nullptr;
 
@@ -275,8 +261,7 @@ public:
 		return returnObject;
 	}
 
-	template <UObjectOrDerived T>
-	static T* getArchetype(const UObject* obj)
+	template <UObjectOrDerived T> static T* getArchetype(const UObject* obj)
 	{
 		if (!validUObject(obj) || !validUObject(obj->ObjectArchetype) || !obj->ObjectArchetype->IsA<T>())
 			return nullptr;
@@ -332,8 +317,7 @@ public:
 
 	// misc
 	std::string fullNameWithoutClass(UObject* obj);
-	void spawnNotification(const std::string& title, const std::string& content, float duration, bool log = false);
+	void        spawnNotification(const std::string& title, const std::string& content, float duration, bool log = false);
 };
-
 
 extern class InstancesComponent Instances;

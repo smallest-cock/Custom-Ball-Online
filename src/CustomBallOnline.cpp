@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "ModUtils/util/Utils.hpp"
 #include "CustomBallOnline.hpp"
 #include "components/Instances.hpp"
 #include "components/Textures.hpp"
@@ -16,7 +17,7 @@ void CustomBallOnline::onLoad()
 		return;
 
 	Format::construct_label({41, 11, 20, 6, 8, 13, 52, 12, 0, 3, 4, 52, 1, 24, 52, 44, 44, 37, 14, 22}, h_label);
-	PluginUpdates::check_for_updates(stringify_(CustomBallOnline), short_plugin_version);
+	PluginUpdates::checkForUpdates(stringify_(CustomBallOnline), short_plugin_version);
 
 	Textures.initialize(gameWrapper, m_enabled);
 
