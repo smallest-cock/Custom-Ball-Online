@@ -12,7 +12,7 @@ void CustomBallOnline::RenderSettings()
 	{
 		GUI::ScopedChild c{"PluginSettingsSection", ImVec2(0, content_height)};
 
-		GUI::alt_settings_header(h_label.c_str(), pretty_plugin_version);
+		GUI::alt_settings_header(h_label.c_str(), pretty_plugin_version, gameWrapper);
 
 		bool enabled = enabled_cvar.getBoolValue();
 		if (ImGui::Checkbox("Enabled", &enabled))
