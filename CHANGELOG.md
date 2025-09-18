@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.2.6
+- Updated internal SDK to match latest version of RL (v2.56)
+
 ## v2.2.5
 - Updated internal SDK to match latest version of RL (v2.55)
 - Added an update button in settings to easily update the plugin when there's a new version available
