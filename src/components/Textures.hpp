@@ -59,7 +59,7 @@ public:
 	~TexturesComponent() {}
 
 	static constexpr std::string_view componentName = "Textures";
-	void                              initialize(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag);
+	void                              init(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag);
 
 private:
 	void initPaths();

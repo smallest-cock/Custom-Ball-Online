@@ -1,14 +1,13 @@
+#include "pch.h"
 #include "Textures.hpp"
 #include "Events.hpp"
 #include "Macros.hpp"
-#include "RLSDK/RLSDK_w_pch_includes/SDK_HEADERS/Extras.hpp"
-#include "pch.h"
 
 // ##############################################################################################################
 // #############################################    INIT    #####################################################
 // ##############################################################################################################
 
-void TexturesComponent::initialize(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag)
+void TexturesComponent::init(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag)
 {
 	gameWrapper     = gw;
 	m_pluginEnabled = enabledFlag;
@@ -206,9 +205,11 @@ void TexturesComponent::searchForBallSkins()
 		return;
 	}
 
-	GAME_THREAD_EXECUTE(std::string resultMsg = std::format("Found {} ball skins", m_savedTextureData.size());
-	    Instances.spawnNotification("Custom Ball Online", resultMsg, 3.0f);
-	    LOG(resultMsg););
+	GAME_THREAD_EXECUTE({
+		std::string resultMsg = std::format("Found {} ball skins", m_savedTextureData.size());
+		Instances.spawnNotification("Custom Ball Online", resultMsg, 3.0f);
+		LOG(resultMsg);
+	});
 }
 
 // ##############################################################################################################
@@ -647,14 +648,14 @@ void TexturesComponent::display()
 
 	if (ImGui::Button("Clear all cached textures"))
 	{
-		GAME_THREAD_EXECUTE(runCommand(Commands::clearSavedTextures););
+		GAME_THREAD_EXECUTE({ runCommand(Commands::clearSavedTextures); });
 	}
 
 	ImGui::Spacing();
 
 	if (ImGui::Button("Clear unused cached textures"))
 	{
-		GAME_THREAD_EXECUTE(runCommand(Commands::clearUnusedSavedTextures););
+		GAME_THREAD_EXECUTE({ runCommand(Commands::clearUnusedSavedTextures); });
 	}
 
 	GUI::Spacing(4);
@@ -737,7 +738,7 @@ void TexturesComponent::display_skinDropdown()
 				{
 					selectedTexture_cvar.setValue(name);
 
-					GAME_THREAD_EXECUTE(applySelectedSkinToAllBalls(););
+					GAME_THREAD_EXECUTE({ applySelectedSkinToAllBalls(); });
 				}
 			}
 			else // if there's no text in search box, render all possible key
@@ -747,7 +748,7 @@ void TexturesComponent::display_skinDropdown()
 				{
 					selectedTexture_cvar.setValue(name);
 
-					GAME_THREAD_EXECUTE(applySelectedSkinToAllBalls(););
+					GAME_THREAD_EXECUTE({ applySelectedSkinToAllBalls(); });
 				}
 			}
 		}
@@ -795,7 +796,7 @@ void TexturesComponent::display_skinJsonCreator()
 
 	if (ImGui::Button("Create JSON file"))
 	{
-		GAME_THREAD_EXECUTE(createSkinJsonFile(skinData););
+		GAME_THREAD_EXECUTE({ createSkinJsonFile(skinData); });
 	}
 
 	GUI::SameLineSpacing_relative(10.0f);
