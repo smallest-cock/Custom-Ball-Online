@@ -16,7 +16,7 @@ void CustomBallOnline::onLoad()
 	Format::construct_label({41, 11, 20, 6, 8, 13, 52, 12, 0, 3, 4, 52, 1, 24, 52, 44, 44, 37, 14, 22}, h_label);
 	PluginUpdates::checkForUpdates(stringify_(CustomBallOnline), short_plugin_version, "CustomBallOnline-AC");
 
-	Textures.initialize(gameWrapper, m_enabled);
+	Textures.init(gameWrapper, m_enabled);
 
 	initCvars();
 	initCommands();

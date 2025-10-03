@@ -7,7 +7,7 @@
 // ###############################################    INIT    ###################################################
 // ##############################################################################################################
 
-void TexturesComponent::initialize(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag)
+void TexturesComponent::init(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag)
 {
 	gameWrapper     = gw;
 	m_pluginEnabled = enabledFlag;
@@ -823,14 +823,14 @@ void TexturesComponent::display()
 
 	if (ImGui::Button("Clear all saved textures"))
 	{
-		GAME_THREAD_EXECUTE(runCommand(Commands::clearSavedTextures););
+		GAME_THREAD_EXECUTE({ runCommand(Commands::clearSavedTextures); });
 	}
 
 	GUI::Spacing(2);
 
 	if (ImGui::Button("Clear unused saved textures"))
 	{
-		GAME_THREAD_EXECUTE(runCommand(Commands::clearUnusedSavedTextures););
+		GAME_THREAD_EXECUTE({ runCommand(Commands::clearUnusedSavedTextures); });
 	}
 
 	GUI::Spacing(4);
@@ -908,7 +908,7 @@ void TexturesComponent::display_skinJsonCreator()
 
 	if (ImGui::Button("Create JSON file"))
 	{
-		GAME_THREAD_EXECUTE(createSkinJsonFile(skinData););
+		GAME_THREAD_EXECUTE({ createSkinJsonFile(skinData); });
 	}
 
 	GUI::SameLineSpacing_relative(10.0f);

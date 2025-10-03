@@ -39,22 +39,21 @@ enum class EMatchType : uint8_t
 
 template <typename Derived> class Component
 {
-private:
-public:
+protected:
 	std::shared_ptr<GameWrapper> gameWrapper;
 
 	template <typename... Args>
 	static void LOG(std::string_view format_str, Args&&... args) // overload LOG function to add component name prefix
 	{
 		std::string strWithComponentName = std::format("[{}] {}", Derived::componentName, format_str);
-		::LOG(std::vformat(strWithComponentName, std::make_format_args(args...)));
+		::LOG(strWithComponentName, std::forward<Args>(args)...);
 	}
 
 	template <typename... Args>
 	static void LOGERROR(std::string_view format_str, Args&&... args) // overload LOG function to add component name prefix
 	{
 		std::string strWithComponentName = std::format("[{}] ERROR: {}", Derived::componentName, format_str);
-		::LOG(std::vformat(strWithComponentName, std::make_format_args(args...)));
+		::LOG(strWithComponentName, std::forward<Args>(args)...);
 	}
 
 	// hooks

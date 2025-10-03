@@ -53,6 +53,5 @@ public:
 	void RenderSettings() override;
 
 	// header/footer stuff
-	static constexpr float HEADER_HEIGHT = 80.0f;
 	static constexpr float FOOTER_HEIGHT = 40.0f;
 };
