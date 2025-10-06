@@ -99,6 +99,10 @@ jobs:
                           - `CustomBallOnline-AC.zip` is for people who use AlphaConsole
 
                       3. Extract the `.zip` file and run `install.bat`
+                        - If you get an error when running `install.bat`, you can manually drag/drop `${{ env.PLUGIN_NAME }}.dll` into your bakkesmod plugins folder located here:
+                          ```
+                          %appdata%\bakkesmod\bakkesmod\plugins
+                          ```
 
                       ## Notes
                       ${{ needs.check-changelog.outputs.changelog }}
