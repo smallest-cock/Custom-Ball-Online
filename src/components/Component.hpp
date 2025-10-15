@@ -1,6 +1,7 @@
 #pragma once
-#include "Cvars.hpp"
+#include "Instances.hpp"
 #include <ModUtils/wrappers/GFxWrapper.hpp>
+#include "Cvars.hpp"
 
 enum class EGameStates : uint8_t
 {
