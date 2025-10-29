@@ -505,7 +505,7 @@ UTexture2DDynamic* TexturesComponent::imgPathToTexture(const fs::path& imgPath, 
 	}
 
 	if (markInvincible)
-		Instances.MarkInvincible(customTex);
+		Instances.markInvincible(customTex);
 
 	return customTex;
 
@@ -892,7 +892,7 @@ void BallSkinData::clearLoadedTextures()
 		if (!tex.texture)
 			continue;
 
-		Instances.SimpleMarkForDestroy(tex.texture);
+		Instances.simpleMarkForDestroy(tex.texture);
 		tex.texture = nullptr; // overwrite with nullptr
 	}
 

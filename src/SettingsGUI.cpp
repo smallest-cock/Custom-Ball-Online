@@ -12,7 +12,7 @@ void CustomBallOnline::RenderSettings()
 	{
 		GUI::ScopedChild c{"PluginSettingsSection", ImVec2(0, contentHeight)};
 
-		GUI::alt_settings_header(h_label.c_str(), pretty_plugin_version, gameWrapper);
+		GUI::alt_settings_header(h_label.c_str(), plugin_version_display, gameWrapper);
 
 		GUI::Spacing(2);
 
