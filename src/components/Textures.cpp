@@ -447,7 +447,7 @@ void TexturesComponent::clearSavedTextures(bool onlyClearActualTextures)
 	for (auto& [texName, texData] : m_textureCache)
 	{
 		for (auto& [param_name, texture] : texData.textures)
-			Instances.MarkForDestroy(texture);
+			Instances.markForDestroy(texture);
 
 		if (onlyClearActualTextures)
 			texData.textures.clear();
@@ -473,7 +473,7 @@ void TexturesComponent::clearUnusedSavedTextures(const std::string& acSelectedTe
 
 		// mark all unused texture instances to be destroyed by GC
 		for (auto& [param_name, texture] : texData.textures)
-			Instances.MarkForDestroy(texture);
+			Instances.markForDestroy(texture);
 
 		if (onlyClearActualTextures)
 			texData.textures.clear();
@@ -542,7 +542,7 @@ void TexturesComponent::handleSetTexParamValue(
 			}
 			else if (it->second != tex) // only cleanup old texture if it's not the same one in params
 			{
-				Instances.MarkForDestroy(it->second); // cleanup old texture
+				Instances.markForDestroy(it->second); // cleanup old texture
 				it->second = tex;                     // overwrite old (finna be destroyed) texture with new one
 				LOG("Cached the \"{}\" texture from SetTextureParameterValue", paramName);
 			}
@@ -648,7 +648,7 @@ void TexturesComponent::loadTexturesForExistingData(BallTextureData& data, bool 
 	{
 		// yeet any existing textures in textures map (mark for destroy first)
 		for (const auto& [paramName, tex] : data.textures)
-			Instances.MarkForDestroy(tex);
+			Instances.markForDestroy(tex);
 		data.textures.clear();
 
 		// load all textures from img_paths map
@@ -724,7 +724,7 @@ UTexture2DDynamic* TexturesComponent::imgPathToTexture(const fs::path& imgPath, 
 	}
 
 	if (markInvincible)
-		Instances.MarkInvincible(customTex);
+		Instances.markInvincible(customTex);
 
 	return customTex;
 

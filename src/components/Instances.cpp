@@ -1,18 +1,10 @@
 #include "pch.h"
 #include "Instances.hpp"
 
+InstancesComponent::InstancesComponent() { onCreate(); }
+InstancesComponent::~InstancesComponent() { onDestroy(); }
 
-InstancesComponent::InstancesComponent()
-{
-	OnCreate();
-}
-
-InstancesComponent::~InstancesComponent()
-{
-	OnDestroy();
-}
-
-void InstancesComponent::OnCreate()
+void InstancesComponent::onCreate()
 {
 	I_UCanvas             = nullptr;
 	I_AHUD                = nullptr;
@@ -20,27 +12,38 @@ void InstancesComponent::OnCreate()
 	I_APlayerController   = nullptr;
 }
 
-void InstancesComponent::OnDestroy()
+void InstancesComponent::onDestroy()
 {
 	m_staticClasses.clear();
 	m_staticFunctions.clear();
 
 	for (UObject* uObject : m_createdObjects)
 	{
-		if (uObject)
-		{
-			MarkForDestroy(uObject);
-		}
+		if (!uObject)
+			continue;
+
+		markForDestroy(uObject);
 	}
 
 	m_createdObjects.clear();
 }
 
-// ========================================= to initialize globals ===========================================
+// ========================================= init RLSDK globals ===========================================
 
-uintptr_t InstancesComponent::FindPattern(HMODULE module, const unsigned char* pattern, const char* mask)
+constexpr auto MODULE_NAME = L"RocketLeague.exe";
+
+uintptr_t findRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32)
 {
-	MODULEINFO info{};
+	if (!startAddr)
+		return 0;
+	uintptr_t ripRelativeOffsetAddr = startAddr + offsetToDisplacementInt32;
+	int32_t   displacement          = *reinterpret_cast<int32_t*>(ripRelativeOffsetAddr);
+	return (ripRelativeOffsetAddr + 4) + displacement;
+};
+
+uintptr_t InstancesComponent::findPattern(HMODULE module, const unsigned char* pattern, const char* mask)
+{
+	MODULEINFO info = {};
 	GetModuleInformation(GetCurrentProcess(), module, &info, sizeof(MODULEINFO));
 
 	uintptr_t start  = reinterpret_cast<uintptr_t>(module);
@@ -54,9 +57,7 @@ uintptr_t InstancesComponent::FindPattern(HMODULE module, const unsigned char* p
 		if (*reinterpret_cast<unsigned char*>(retAddress) == pattern[pos] || mask[pos] == '?')
 		{
 			if (pos == maskLength)
-			{
 				return (retAddress - maskLength);
-			}
 			pos++;
 		}
 		else
@@ -68,31 +69,51 @@ uintptr_t InstancesComponent::FindPattern(HMODULE module, const unsigned char* p
 	return NULL;
 }
 
-uintptr_t InstancesComponent::GetGNamesAddress()
+uintptr_t InstancesComponent::findGNamesAddress()
 {
 	unsigned char GNamesPattern[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x35\x25\x02\x00";
 	char          GNamesMask[]    = "??????xx??xxxxxx";
 
-	auto GNamesAddress = FindPattern(GetModuleHandle(L"RocketLeague.exe"), GNamesPattern, GNamesMask);
-
-	return GNamesAddress;
+	return findPattern(GetModuleHandle(MODULE_NAME), GNamesPattern, GNamesMask);
 }
 
-uintptr_t InstancesComponent::GetGObjectsAddress()
+uintptr_t InstancesComponent::findGMallocAddress()
 {
-	return GetGNamesAddress() + 0x48;
+	constexpr uint8_t pattern[] = "\x48\x89\x0D\x00\x00\x00\x00\x48\x8B\x01\xFF\x50\x60";
+	constexpr auto    mask      = "xxx????xxxxxx";
+
+	uintptr_t foundAddr = findPattern(GetModuleHandle(MODULE_NAME), pattern, mask);
+	if (!foundAddr)
+	{
+		LOGERROR("GMalloc wasn't found! Returning 0...");
+		return 0;
+	}
+	return findRipRelativeAddr(foundAddr, 3);
 }
 
-bool InstancesComponent::InitGlobals()
+bool InstancesComponent::initGlobals()
 {
-	uintptr_t gnamesAddr = GetGNamesAddress();
-	GNames = reinterpret_cast<TArray<FNameEntry*>*>(gnamesAddr);
-	GObjects = reinterpret_cast<TArray<UObject*>*>(gnamesAddr + 0x48);
+	uintptr_t gnamesAddr = findGNamesAddress();
+	if (!gnamesAddr)
+	{
+		LOGERROR("Failed to find GNames address via pattern scan");
+		return false;
+	}
+	GNames   = reinterpret_cast<GNames_t>(gnamesAddr);
+	GObjects = reinterpret_cast<GObjects_t>(gnamesAddr + 0x48);
 
-	return CheckGlobals();
+	uintptr_t gmallocAddr = findGMallocAddress();
+	if (!gmallocAddr)
+	{
+		LOGERROR("Failed to find GMalloc address via pattern scan");
+		return false;
+	}
+	GMalloc = gmallocAddr;
+
+	return checkGlobals();
 }
 
-bool InstancesComponent::AreGObjectsValid()
+bool InstancesComponent::areGObjectsValid()
 {
 	if (UObject::GObjObjects()->size() > 0 && UObject::GObjObjects()->capacity() > UObject::GObjObjects()->size())
 	{
@@ -102,7 +123,7 @@ bool InstancesComponent::AreGObjectsValid()
 	return false;
 }
 
-bool InstancesComponent::AreGNamesValid()
+bool InstancesComponent::areGNamesValid()
 {
 	if (FName::Names()->size() > 0 && FName::Names()->capacity() > FName::Names()->size())
 	{
@@ -112,11 +133,11 @@ bool InstancesComponent::AreGNamesValid()
 	return false;
 }
 
-bool InstancesComponent::CheckGlobals()
+bool InstancesComponent::checkGlobals()
 {
-	bool gnamesValid   = GNames && AreGNamesValid();
-	bool gobjectsValid = GObjects && AreGObjectsValid();
-	if (!(gnamesValid && gobjectsValid))
+	bool gnamesValid   = GNames && areGNamesValid();
+	bool gobjectsValid = GObjects && areGObjectsValid();
+	if (!gnamesValid || !gobjectsValid)
 	{
 		LOG("(onLoad) Error: RLSDK classes are wrong... plugin needs an update :(");
 		LOG(std::format("GNames valid: {} -- GObjects valid: {}", gnamesValid, gobjectsValid));
@@ -181,36 +202,33 @@ class UFunction* InstancesComponent::FindStaticFunction(const std::string& class
 	return nullptr;
 }
 
-void InstancesComponent::MarkInvincible(class UObject* object)
+void InstancesComponent::markInvincible(class UObject* object)
 {
-	if (object)
-	{
-		object->ObjectFlags &= ~EObjectFlags::RF_TagGarbage;
-		object->ObjectFlags &= ~EObjectFlags::RF_PendingKill;
-		object->ObjectFlags |= EObjectFlags::RF_DisregardForGC;
-		object->ObjectFlags |= EObjectFlags::RF_RootSet;
-	}
+	if (!object)
+		return;
+
+	object->ObjectFlags &= ~EObjectFlags::RF_Transient;
+	object->ObjectFlags &= ~EObjectFlags::RF_TagGarbage;
+	object->ObjectFlags &= ~EObjectFlags::RF_PendingKill;
+	object->ObjectFlags |= EObjectFlags::RF_DisregardForGC;
+	object->ObjectFlags |= EObjectFlags::RF_RootSet;
 }
 
-void InstancesComponent::MarkForDestroy(class UObject* object)
+void InstancesComponent::markForDestroy(class UObject* object)
 {
-	if (object)
-	{
-		object->ObjectFlags |= EObjectFlags::RF_TagGarbage;
-		object->ObjectFlags |= EObjectFlags::RF_PendingKill;
-		object->ObjectFlags &= ~EObjectFlags::RF_DisregardForGC;
-		object->ObjectFlags &= ~EObjectFlags::RF_RootSet;
+	if (!object)
+		return;
 
-		auto objectIt = std::find(m_createdObjects.begin(), m_createdObjects.end(), object);
+	object->ObjectFlags |= EObjectFlags::RF_Transient;
+	object->ObjectFlags |= EObjectFlags::RF_TagGarbage;
+	object->ObjectFlags |= EObjectFlags::RF_PendingKill;
 
-		if (objectIt != m_createdObjects.end())
-		{
-			m_createdObjects.erase(objectIt);
-		}
-	}
+	auto objectIt = std::find(m_createdObjects.begin(), m_createdObjects.end(), object);
+	if (objectIt != m_createdObjects.end())
+		m_createdObjects.erase(objectIt);
 }
 
-void InstancesComponent::SimpleMarkForDestroy(class UObject* object)
+void InstancesComponent::simpleMarkForDestroy(class UObject* object)
 {
 	if (!object)
 		return;
@@ -221,40 +239,19 @@ void InstancesComponent::SimpleMarkForDestroy(class UObject* object)
 	object->ObjectFlags &= ~EObjectFlags::RF_RootSet;
 }
 
-class UEngine* InstancesComponent::IUEngine()
-{
-	return UEngine::GetEngine();
-}
+class UEngine* InstancesComponent::IUEngine() { return UEngine::GetEngine(); }
 
-class UAudioDevice* InstancesComponent::IUAudioDevice()
-{
-	return UEngine::GetAudioDevice();
-}
+class UAudioDevice* InstancesComponent::IUAudioDevice() { return UEngine::GetAudioDevice(); }
 
-class AWorldInfo* InstancesComponent::IAWorldInfo()
-{
-	return UEngine::GetCurrentWorldInfo();
-}
+class AWorldInfo* InstancesComponent::IAWorldInfo() { return UEngine::GetCurrentWorldInfo(); }
 
-class UCanvas* InstancesComponent::IUCanvas()
-{
-	return I_UCanvas;
-}
+class UCanvas* InstancesComponent::IUCanvas() { return I_UCanvas; }
 
-class AHUD* InstancesComponent::IAHUD()
-{
-	return I_AHUD;
-}
+class AHUD* InstancesComponent::IAHUD() { return I_AHUD; }
 
-class UFileSystem* InstancesComponent::IUFileSystem()
-{
-	return reinterpret_cast<UFileSystem*>(UFileSystem::StaticClass());
-}
+class UFileSystem* InstancesComponent::IUFileSystem() { return reinterpret_cast<UFileSystem*>(UFileSystem::StaticClass()); }
 
-class UGameViewportClient* InstancesComponent::IUGameViewportClient()
-{
-	return I_UGameViewportClient;
-}
+class UGameViewportClient* InstancesComponent::IUGameViewportClient() { return I_UGameViewportClient; }
 
 class ULocalPlayer* InstancesComponent::IULocalPlayer()
 {
@@ -268,10 +265,7 @@ class ULocalPlayer* InstancesComponent::IULocalPlayer()
 	return nullptr;
 }
 
-class APlayerController* InstancesComponent::IAPlayerController()
-{
-	return I_APlayerController;
-}
+class APlayerController* InstancesComponent::IAPlayerController() { return I_APlayerController; }
 
 struct FUniqueNetId InstancesComponent::GetUniqueID()
 {
@@ -357,7 +351,7 @@ UMatchType_TA* InstancesComponent::getMatchType()
 UGFxDataStore_X* InstancesComponent::GetDataStore()
 {
 	if (!validUObject(dataStore))
-		dataStore = GetInstanceOf<UGFxDataStore_X>();
+		dataStore = getInstanceOf<UGFxDataStore_X>();
 
 	return dataStore;
 }
@@ -365,7 +359,7 @@ UGFxDataStore_X* InstancesComponent::GetDataStore()
 UOnlinePlayer_X* InstancesComponent::GetOnlinePlayer()
 {
 	if (!validUObject(onlinePlayer))
-		onlinePlayer = GetInstanceOf<UOnlinePlayer_X>();
+		onlinePlayer = getInstanceOf<UOnlinePlayer_X>();
 
 	return onlinePlayer;
 }
@@ -373,7 +367,7 @@ UOnlinePlayer_X* InstancesComponent::GetOnlinePlayer()
 UCarColorSet_TA* InstancesComponent::GetColorPalette()
 {
 	if (!validUObject(colorPalette))
-		colorPalette = GetInstanceOf<UCarColorSet_TA>();
+		colorPalette = getInstanceOf<UCarColorSet_TA>();
 
 	return colorPalette;
 }
@@ -394,7 +388,7 @@ std::string InstancesComponent::fullNameWithoutClass(UObject* obj)
 
 void InstancesComponent::spawnNotification(const std::string& title, const std::string& content, float duration, bool log)
 {
-	auto notificationManager = Instances.GetInstanceOf<UNotificationManager_TA>();
+	auto* notificationManager = getInstanceOf<UNotificationManager_TA>();
 	if (!validUObject(notificationManager))
 		return;
 
@@ -413,6 +407,5 @@ void InstancesComponent::spawnNotification(const std::string& title, const std::
 	if (log)
 		LOG("[{}] {}", title.c_str(), content.c_str());
 }
-
 
 class InstancesComponent Instances{};
