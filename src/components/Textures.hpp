@@ -72,7 +72,7 @@ private:
 	// cvar values
 	std::shared_ptr<const bool>  m_pluginEnabled; // from main plugin class
 	std::shared_ptr<bool>        m_clearUnusedTexturesOnLoadingScreens = std::make_shared<bool>(false);
-	std::shared_ptr<std::string> m_selectedTextureStr                  = std::make_shared<std::string>("");
+	std::shared_ptr<std::string> m_selectedTextureStr = std::make_shared<std::string>("example_ball_skins.json - My Example Skin");
 
 	// flags
 	bool m_ballDissolveChanged = false;

@@ -46,7 +46,7 @@ void TexturesComponent::initCvars()
 	registerCvar_bool(Cvars::clearUnusedTexturesOnLoading, false).bindTo(m_clearUnusedTexturesOnLoadingScreens);
 
 	// strings
-	registerCvar_string(Cvars::selectedTexture, "my_ball_skins.json - sconer")
+	registerCvar_string(Cvars::selectedTexture, "example_ball_skins.json - My Example Skin")
 	    .bindTo(m_selectedTextureStr); // put back to default "", after done testing
 }
 
@@ -769,26 +769,34 @@ void TexturesComponent::display_skinDropdown()
 
 void TexturesComponent::display_skinJsonCreator()
 {
-	static SkinJsonDataForImgui skinData{};
-	static bool                 useNormalOrMask = false;
-	static constexpr auto       IMG_TIP         = "Image file path, relative to the BallTextures folder\n\n"
-	                                              "If YOUR_IMAGE.png exists directly in the BallTextures folder, you can "
-	                                              "just put \"YOUR_IMAGE.png\"";
+	static SkinJsonDataForImgui       skinData{};
+	static bool                       useNormalOrMask = false;
+	static constexpr std::string_view IMG_TIP =
+	    "File path of your image (can be a relative path starting from the BallTextures folder)\n\n"
+	    "Examples:\n"
+	    "\"./some_folder/my_image.png\"\n"
+	    "\"VeryCoolBall.png\"\n"
+	    "\"C:\\Users\\Jeffrey "
+	    "Epstein\\AppData\\Roaming\\bakkesmod\\bakkesmod\\data\\CustomBallOnline\\BallTextures\\classified_ball_skin.png\"\n\n"
+	    "If your image exists directly in the BallTextures folder (aka not in a subfolder), you can simply put the file name\n"
+	    "e.g. \"CoolBall67.png\"";
 
 	ImGui::Checkbox("Show Normal & Mask parameters", &useNormalOrMask);
 
 	GUI::Spacing(2);
 
 	ImGui::InputText("JSON file name", skinData.jsonFileName, IM_ARRAYSIZE(skinData.jsonFileName));
+	GUI::ToolTip("Name of the JSON file to be created (with or without .json extension, doesn't matter)");
 	ImGui::InputText("Ball skin name", skinData.skinName, IM_ARRAYSIZE(skinData.skinName));
-	ImGui::InputText("Diffuse image", skinData.diffusePath, IM_ARRAYSIZE(skinData.diffusePath));
+	GUI::ToolTip("Name of your ball skin as it will be shown in the menu");
+	ImGui::InputText("Diffuse", skinData.diffusePath, IM_ARRAYSIZE(skinData.diffusePath));
 	GUI::ToolTip(IMG_TIP);
 
 	if (useNormalOrMask)
 	{
-		ImGui::InputText("Normal image", skinData.normalPath, IM_ARRAYSIZE(skinData.normalPath));
+		ImGui::InputText("Normal", skinData.normalPath, IM_ARRAYSIZE(skinData.normalPath));
 		GUI::ToolTip(IMG_TIP);
-		ImGui::InputText("Mask image", skinData.maskPath, IM_ARRAYSIZE(skinData.maskPath));
+		ImGui::InputText("Mask", skinData.maskPath, IM_ARRAYSIZE(skinData.maskPath));
 		GUI::ToolTip(IMG_TIP);
 	}
 

@@ -1,63 +1,66 @@
 name: Build With CMake + Ninja
 
 env:
-    PLUGIN_NAME: CustomBallOnline
+  PLUGIN_NAME: CustomBallOnline
 
 on:
-    workflow_call:
-        inputs:
-            branch:
-                required: true
-                type: string
-            artifact_suffix:
-                required: true
-                type: string
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+      artifact_suffix:
+        required: true
+        type: string
 permissions:
-    contents: write
+  contents: write
+  id-token: write
+  attestations: write
 
 jobs:
-    build:
-        runs-on: windows-latest
-        steps:
-            - name: 📥 Checkout repository (${{ inputs.branch }})
-              uses: actions/checkout@v4
-              with:
-                  ref: ${{ inputs.branch }}
-                  submodules: false
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: 📥 Checkout repository (${{ inputs.branch }})
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          submodules: false
 
-            - name: 🍆 Initialize submodules
-              run: ./scripts/init-submodules.bat
+      - name: 🍆 Initialize submodules
+        run: ./scripts/init-submodules.bat
 
-            - name: 🪟 Set up MSVC
-              uses: ilammy/msvc-dev-cmd@v1
+      - name: 🪟 Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
 
-            - name: ⚙️ Set up CMake
-              uses: jwlawson/actions-setup-cmake@v1
+      - name: ⚙️ Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
 
-            - name: 🥷 Set up Ninja
-              uses: seanmiddleditch/gha-setup-ninja@v3
+      - name: 🥷 Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v3
 
-            - name: 🧱 Configure project (CMake)
-              run: cmake --preset windows-x64-msvc
+      - name: 🧱 Configure project (CMake)
+        run: cmake --preset windows-x64-msvc
 
-            - name: 🔨 Build project (CMake + Ninja)
-              run: cmake --build build
+      - name: 🔨 Build project (CMake)
+        run: cmake --build build
 
-            - name: 🥵 Prepare artifact files (${{ inputs.artifact_suffix }})
-              shell: bash
-              run: |
-                  7z a source.zip * -xr!README.md -xr!build -xr!plugins -xr!ninja-build -xr!scripts -xr!assets -xr!.git
-                  mkdir -p dist temp/debug temp/installation_zip
-                  mv ./source.zip temp/debug
-                  cp ./plugins/*.dll temp/installation_zip
-                  mv ./scripts/install.bat temp/installation_zip
-                  mv ./plugins/*.dll temp/debug
-                  mv ./plugins/*.pdb temp/debug
-                  7z a "dist/${{ env.PLUGIN_NAME }}${{ inputs.artifact_suffix }}.zip" ./temp/installation_zip/*
-                  7z a dist/debug${{ inputs.artifact_suffix }}.zip ./temp/debug/*
+      - name: 🥵 Prepare artifact files (${{ inputs.artifact_suffix }})
+        shell: bash
+        run: |
+          mkdir -p dist temp/debug temp/installation_zip
+          cp ./plugins/*.dll temp/installation_zip
+          cp ./scripts/install.bat temp/installation_zip
+          7z a "dist/${{ env.PLUGIN_NAME }}${{ inputs.artifact_suffix }}.zip" ./temp/installation_zip/*
 
-            - name: 📦 Upload build artifacts (${{ inputs.artifact_suffix }})
-              uses: actions/upload-artifact@v4
-              with:
-                  name: artifacts${{ inputs.artifact_suffix }}
-                  path: dist/*
+      - name: 🔑 Attest release ZIP
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: "dist/${{ env.PLUGIN_NAME }}${{ inputs.artifact_suffix }}.zip"
+
+      - name: 📦 Upload build artifacts (${{ inputs.artifact_suffix }})
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts${{ inputs.artifact_suffix }}
+          path: dist/*

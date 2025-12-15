@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 
-
 #define CVAR(name, desc) CvarData("cbo_" name, desc) // automatically apply the prefix to cvar names
 
 struct CvarData
@@ -12,25 +11,24 @@ struct CvarData
 	constexpr CvarData(const char* name, const char* description) : name(name), description(description) {}
 };
 
-
 namespace Cvars
 {
-	const std::string acSelectedTexture =				"acplugin_balltexture_selectedtexture";
+const std::string acSelectedTexture = "acplugin_balltexture_selectedtexture";
 
-	// bools
-	constexpr CvarData enabled =						CVAR("enabled",							"plugin enabled");
-	constexpr CvarData clearUnusedTexturesOnLoading =	CVAR("clear_unused_on_loading",			"clear unused textures on loading screen");
+// bools
+constexpr CvarData enabled                      = CVAR("enabled", "plugin enabled");
+constexpr CvarData clearUnusedTexturesOnLoading = CVAR("clear_unused_on_loading", "clear unused textures on loading screen");
 
-	// strings
-	constexpr CvarData selectedTexture =				CVAR("selected_texture",				"selected ball texture");
-}
+// strings
+constexpr CvarData selectedTexture = CVAR("selected_texture", "selected ball texture");
+} // namespace Cvars
 
 namespace Commands
 {
-	constexpr CvarData applyTexture =					CVAR("apply_ball_texture",				"apply the currently selected ball texture");
-	constexpr CvarData clearSavedTextures =				CVAR("clear_saved_textures",			"clear saved/stored ball textures");
-	constexpr CvarData clearUnusedSavedTextures =		CVAR("clear_unused_saved_textures",		"clear unused saved/stored ball textures");
-	constexpr CvarData test =							CVAR("test",							"test");
-}
+constexpr CvarData applyTexture             = CVAR("apply_ball_skin", "apply the currently selected ball skin");
+constexpr CvarData clearSavedTextures       = CVAR("clear_saved_textures", "clear saved/stored ball textures");
+constexpr CvarData clearUnusedSavedTextures = CVAR("clear_unused_saved_textures", "clear unused saved/stored ball textures");
+constexpr CvarData test                     = CVAR("test", "test");
+} // namespace Commands
 
 #undef CVAR
