@@ -15,12 +15,11 @@ See the [latest release](https://github.com/smallest-cock/Custom-Ball-Online/rel
     |----------------|:-----------------:|
     | Regular | `bakkesmod\data\CustomBallOnline\BallTextures` |
     | AlphaConsole | `bakkesmod\data\acplugin\BallTextures` |
-    >[!TIP]
-    >Check out [this tutorial](https://youtu.be/MMai_foKfyo) to learn how to install a ball skin
+    - Check out [this tutorial](https://youtu.be/MMai_foKfyo) to learn how to install ball skins
 
-3. Select a skin in the plugin menu
+4. Select a skin in the plugin menu. If you're using AlphaConsole, this means selecting a skin in the AlphaConsole menu.
 
-4. Join a match, and your skin should automatically be applied 🥳
+5. Join a match, and your skin should automatically be applied 🥳
 
 ## 💻 Console Commands
 The following commands aren't necessary for regular usage, but they exist if you ever need them. You can enter them in the BakkesMod console (`F6`) or bind them to keys:
