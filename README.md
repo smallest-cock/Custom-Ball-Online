@@ -33,7 +33,7 @@ The following commands aren't necessary for regular usage, but they exist if you
 <br>
 
 >[!TIP]
->If you're experiencing issues with skins being applied automatically, bind `cbo_apply_ball_texture` to a key to apply them whenever you want
+>If you're experiencing issues with skins being applied automatically, bind `cbo_apply_ball_skin` to a key to apply them whenever you want
 
 
 ## 🔨 Building
@@ -53,6 +53,18 @@ Run `./scripts/init-submodules.bat` to initialize the submodules optimally
 </details>
 
 ### 2. Build with CMake
+> [!NOTE]
+> Before building with CMake, the MSVC environment **must** be initialized.
+> This is normally handled automatically by IDEs or certain editor extensions like [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools), but if you're building from the command line, use one of the following methods:
+>
+> - Use an appropriate Windows terminal profile:
+>    - `Developer PowerShell for VS 2022`
+>    - `Developer Command Prompt for VS 2022`
+> - Or run this script once per shell session:
+>   ```
+>   C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat
+>   ```
+
 1. Install [CMake](https://cmake.org/download) and [Ninja](https://github.com/ninja-build/ninja/releases)
    - If you prefer a build system other than Ninja, just create a `CMakeUserPresets.json` and specify it there. [More info here](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
 2. Run this to configure (will generate build files in `./build`):
