@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.0)
 
-project(CustomBallOnline VERSION 2.2.10)
+project(CustomBallOnline VERSION 2.2.11)
 
 set(CMAKE_CXX_STANDARD 20)
 

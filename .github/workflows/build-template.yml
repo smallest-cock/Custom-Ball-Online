@@ -40,10 +40,10 @@ jobs:
         uses: seanmiddleditch/gha-setup-ninja@v3
 
       - name: 🧱 Configure project (CMake)
-        run: cmake --preset windows-x64-msvc
+        run: cmake --preset ninja-release
 
       - name: 🔨 Build project (CMake)
-        run: cmake --build build
+        run: cmake --build --preset Ninja-Release
 
       - name: 🥵 Prepare artifact files (${{ inputs.artifact_suffix }})
         shell: bash

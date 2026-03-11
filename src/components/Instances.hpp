@@ -4,9 +4,6 @@
 
 static constexpr int32_t INSTANCES_INTERATE_OFFSET = 10;
 
-template <typename T>
-concept UObjectOrDerived = std::is_base_of_v<UObject, T>;
-
 using GNames_t   = TArray<FNameEntry*>*;
 using GObjects_t = TArray<UObject*>*;
 

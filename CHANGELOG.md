@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.2.11
+- Updated internal SDK to match latest RL version (v2.66)
+
 ## v2.2.10
 - Added better tooltips in JSON creator
 - Updated internal SDK to match latest version of RL (v2.63)
