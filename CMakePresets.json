@@ -11,26 +11,25 @@
             "description": "Sets generator and source directory",
             "hidden": true,
             "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build"
+            "binaryDir": "${sourceDir}/build",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl",
+                "CMAKE_CXX_COMPILER": "cl",
+                "CMAKE_LINKER": "link",
+                "CMAKE_SYSTEM_NAME": "Windows"
+            }
         },
         {
             "name": "ninja-release",
             "displayName": "Windows (x64): Ninja + cl.exe",
             "inherits": "ninja-base",
             "description": "Sets x64 architecture, compiler/linker, and build type",
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_LINKER": "link"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         }
     ],
