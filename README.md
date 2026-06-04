@@ -37,7 +37,7 @@ The following commands aren't necessary for normal usage, but they exist if you 
 
 ## 🔨 Building
 > [!NOTE]  
-> Building this plugin requires **64-bit Windows** and the **MSVC** toolchain, due to reliance on the Windows SDK and the need for ABI compatibility with Rocket League
+> Building this plugin requires the **MSVC** toolchain, due to reliance on the Windows SDK and the need for ABI compatibility with Rocket League
 
 ### 1. Initialize submodules
 After cloning the repo, run this helper script to optimally initialize submodules:
@@ -54,7 +54,7 @@ After cloning the repo, run this helper script to optimally initialize submodule
 
 ### 2. Build with CMake
 > [!NOTE]
-> Before building with on Windows, the MSVC environment **must** be initialized.
+> Before building on Windows, the MSVC environment **must** be initialized.
 > This is normally handled automatically by IDEs or certain editor extensions like [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools), but if you're building from the command line, use one of the following methods:
 >
 > - Use an appropriate Windows terminal profile:
