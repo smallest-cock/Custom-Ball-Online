@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.0)
 
-project(CustomBallOnline VERSION 2.2.11)
+project(CustomBallOnline VERSION 2.2.12)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -76,7 +76,7 @@ add_compile_options(${compile_options})
 add_compile_definitions(UNICODE _UNICODE)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-  message(FATAL_ERROR
+    message(FATAL_ERROR
     "This project requires a 64-bit build.\n"
     "Make sure your toolchain is configured to use a 64-bit compiler."
   )
@@ -118,13 +118,14 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     WINDOWS_EXPORT_ALL_SYMBOLS OFF
 )
 
-if(NOT "$ENV{CI}" STREQUAL "true")
-    set(INSTALLED_BMSDK_DIR "$ENV{APPDATA}/bakkesmod/bakkesmod/bakkesmodsdk" CACHE PATH "Installed BakkesMod SDK directory")
+if(NOT "$ENV{CI}" STREQUAL "true" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(INSTALLED_BMSDK_DIR "$ENV{APPDATA}/bakkesmod/bakkesmod/bakkesmodsdk"
+        CACHE PATH "Installed BakkesMod SDK directory")
 
     add_custom_command(
         TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND "${INSTALLED_BMSDK_DIR}/bakkesmod-patch.exe" "$<TARGET_FILE:${PROJECT_NAME}>" 
+        COMMAND "${INSTALLED_BMSDK_DIR}/bakkesmod-patch.exe" "$<TARGET_FILE:${PROJECT_NAME}>"
         COMMENT "Running bakkesmod-patch.exe after building ${PROJECT_NAME}"
     )
 endif()

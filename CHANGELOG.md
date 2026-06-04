@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.12
+- Updated internal SDK to match latest RL version (v2.69)
+- Dropped support for the inferior AlphaConsole version
+
 ## v2.2.11
 - Updated internal SDK to match latest RL version (v2.66)
 

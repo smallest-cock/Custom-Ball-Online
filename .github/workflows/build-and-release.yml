@@ -4,6 +4,8 @@ env:
     PLUGIN_NAME: CustomBallOnline
     PLUGIN_NAME_FORMATTED: Custom Ball Online
     TAG_NAME: ${{ github.event.inputs.tag || github.ref_name }}
+    DISCORD_MSG_EMOJI: ⚽
+    DISCORD_MSG_COLOR: 0xA81CFF
 
 on:
     push:
@@ -59,70 +61,83 @@ jobs:
                   } >> "$GITHUB_OUTPUT"
 
     build:
-        name: Build holy version (main)
+        name: Build DLL & Create Release
         needs: check-changelog
-        uses: ./.github/workflows/build-template.yml
-        with:
-            branch: main
-            artifact_suffix: ""
-
-    build-ac-version:
-        name: Build inferior version (ac-version)
-        needs: check-changelog
-        uses: ./.github/workflows/build-template.yml
-        with:
-            branch: ac-version
-            artifact_suffix: "-AC"
-
-    release:
-        needs: [check-changelog, build, build-ac-version]
         runs-on: windows-latest
+
         steps:
-            - uses: actions/download-artifact@v4
-              with:
-                  path: ./artifacts
-                  merge-multiple: true # <--- FLATTENS all artifacts into ./artifacts
+          - name: 📥 Checkout repository
+            uses: actions/checkout@v4
+            with:
+              submodules: false
 
-            - name: 🧪 Check downloaded artifacts
-              shell: bash
-              run: |
-                  echo "Contents of artifacts folder:"
-                  find artifacts -type f
+          - name: 🍆 Initialize submodules
+            run: ./scripts/init-submodules.bat
 
-            - name: 🚀 Create release
-              id: create_release
-              uses: softprops/action-gh-release@v2
-              with:
-                  tag_name: ${{ env.TAG_NAME }}
-                  body: |
-                      ## Install Steps
-                      1. Close Rocket League
+          - name: 🪟 Set up MSVC
+            uses: ilammy/msvc-dev-cmd@v1
 
-                      2. Click `CustomBallOnline.zip` or `CustomBallOnline-AC.zip` below to download it
-                          - `CustomBallOnline.zip` is a superior version for people who don't use AlphaConsole
-                          - `CustomBallOnline-AC.zip` is for people who use AlphaConsole
+          - name: ⚙️ Set up CMake
+            uses: jwlawson/actions-setup-cmake@v1
 
-                      3. Extract the `.zip` file and run `install.bat`
-                            <details> <summary>Getting an error when running <code>install.bat</code> ?</summary>
-                                <ul><br>
-                                    <li>Put <code>${{ env.PLUGIN_NAME }}.dll</code> into your bakkesmod plugins folder, usually located here:
-                                    <br><code>C:\Users\{YOUR USERNAME}\AppData\Roaming\bakkesmod\bakkesmod\plugins</code></li>
-                                </ul>
-                            </details>
+          - name: 🥷 Set up Ninja
+            uses: seanmiddleditch/gha-setup-ninja@v3
 
-                      ## Notes
-                      ${{ needs.check-changelog.outputs.changelog }}
-                  files: artifacts/*.zip
+          - name: 🧱 Configure project (CMake)
+            run: cmake --preset ninja-release
 
-            - name: 🤓 Post release info in discord channel
-              uses: sarisia/actions-status-discord@v1
-              with:
-                  webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-                  nodetail: true
-                  title: "**${{ env.PLUGIN_NAME_FORMATTED }}** `${{ env.TAG_NAME }}` has been released! ⚽ 🚀"
-                  description: |
-                      ### Notes
-                      ${{ needs.check-changelog.outputs.changelog }}
+          - name: 🔨 Build project (CMake)
+            run: cmake --build --preset Ninja-Release
 
-                      **Download:** [${{ env.TAG_NAME }}](${{ steps.create_release.outputs.url }})
-                  color: 0xA81CFF
+          - name: 🥵 Prepare release files
+            shell: bash
+            run: |
+              mkdir -p dist temp/installation_zip
+              cp ./plugins/*.dll temp/installation_zip
+              mv ./scripts/install.bat temp/installation_zip
+              7z a "dist/${{ env.PLUGIN_NAME }}.zip" ./temp/installation_zip/*
+
+          - name: 🔑 Attest release ZIP
+            uses: actions/attest-build-provenance@v3
+            with:
+              subject-path: "dist/${{ env.PLUGIN_NAME }}.zip"
+
+          - name: 🚀 Create release
+            id: create_release
+            uses: softprops/action-gh-release@v2
+            env:
+              WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            with:
+              tag_name: ${{ env.TAG_NAME }}
+              body: |
+                ## Install Steps
+                1. Close Rocket League
+
+                2. Click `${{ env.PLUGIN_NAME }}.zip` below to download it
+
+                3. Extract `${{ env.PLUGIN_NAME }}.zip` and run `install.bat`
+                    <details> <summary>Getting an error when running <code>install.bat</code> ?</summary>
+                        <ul><br>
+                            <li>Put <code>${{ env.PLUGIN_NAME }}.dll</code> in your bakkesmod plugins folder, usually located here:
+                            <br><code>C:\Users\{YOUR USERNAME}\AppData\Roaming\bakkesmod\bakkesmod\plugins</code></li>
+                        </ul>
+                    </details>
+                    
+                ## Notes
+                ${{ needs.check-changelog.outputs.changelog }}
+
+                [GitHub build workflow](${{ env.WORKFLOW_URL }})
+              files: dist/*.zip
+
+          - name: 🤓 Post release info in discord channel
+            uses: sarisia/actions-status-discord@v1
+            with:
+                webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+                nodetail: true
+                title: "**${{ env.PLUGIN_NAME_FORMATTED }}** `${{ env.TAG_NAME }}` has been released! ${{ env.DISCORD_MSG_EMOJI }}"
+                description: |
+                    ### Notes
+                    ${{ needs.check-changelog.outputs.changelog }}
+
+                    **Download:** [${{ env.TAG_NAME }}](${{ steps.create_release.outputs.url }})
+                color: ${{ env.DISCORD_MSG_COLOR }}
