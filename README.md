@@ -7,22 +7,21 @@ Enable custom ball skins in online Rocket League matches
 See the [latest release](https://github.com/smallest-cock/Custom-Ball-Online/releases/latest) and follow the installation steps
 
 ## 📖 Usage
-1. Install the correct version of the plugin
-    - Install `CustomBallOnline-AC.zip` if you use AlphaConsole, otherwise use the superior `CustomBallOnline.zip`
+1. Install the plugin
+    - Extract `CustomBallOnline.zip` and run `install.bat`
   
-2. Install your ball skins in the correct `BallTextures` folder:
-    | Plugin version | `BallTextures` path |
-    |----------------|:-----------------:|
-    | Regular | `bakkesmod\data\CustomBallOnline\BallTextures` |
-    | AlphaConsole | `bakkesmod\data\acplugin\BallTextures` |
-    - Check out [this tutorial](https://youtu.be/MMai_foKfyo) to learn how to install ball skins
+2. Install your ball skins in the plugin's `BallTextures` folder:
+    ```
+    %LOCALAPPDATA%\bakkesmod\bakkesmod\data\CustomBallOnline\BallTextures
+    ```
+    - Check out [this tutorial](https://youtu.be/MMai_foKfyo) to learn how to install skins
 
-4. Select a skin in the plugin menu. If you're using AlphaConsole, this means selecting a skin in the AlphaConsole menu.
+3. Select a ball skin in the plugin menu
 
-5. Join a match, and your skin should automatically be applied 🥳
+4. Join a match, and your skin should automatically be applied 🥳
 
 ## 💻 Console Commands
-The following commands aren't necessary for regular usage, but they exist if you ever need them. You can enter them in the BakkesMod console (`F6`) or bind them to keys:
+The following commands aren't necessary for normal usage, but they exist if you ever need them. You can enter them in the BakkesMod console (`F6`) or bind them to keys:
 
 | Command | Description |
 |---------|-------------|
@@ -41,9 +40,10 @@ The following commands aren't necessary for regular usage, but they exist if you
 > Building this plugin requires **64-bit Windows** and the **MSVC** toolchain, due to reliance on the Windows SDK and the need for ABI compatibility with Rocket League
 
 ### 1. Initialize submodules
-Initialize the submodules after cloning the repo:
-
-Run `./scripts/init-submodules.bat` to initialize the submodules optimally
+After cloning the repo, run this helper script to optimally initialize submodules:
+```
+./scripts/init-submodules.bat
+```
 
 <details> <summary>🔍 Why this instead of <code>git submodule update --init --recursive</code> ?</summary>
    <ul>
@@ -54,7 +54,7 @@ Run `./scripts/init-submodules.bat` to initialize the submodules optimally
 
 ### 2. Build with CMake
 > [!NOTE]
-> Before building with CMake, the MSVC environment **must** be initialized.
+> Before building with on Windows, the MSVC environment **must** be initialized.
 > This is normally handled automatically by IDEs or certain editor extensions like [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools), but if you're building from the command line, use one of the following methods:
 >
 > - Use an appropriate Windows terminal profile:
@@ -69,11 +69,11 @@ Run `./scripts/init-submodules.bat` to initialize the submodules optimally
    - If you prefer a build system other than Ninja, just create a `CMakeUserPresets.json` and specify it there. [More info here](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html)
 2. Run this to configure (will generate build files in `./build`):
     ```
-    cmake --preset windows-x64-msvc
+    cmake --preset ninja-release
     ```
 3. Run this to build:
     ```
-    cmake --build ./build
+    cmake --build --preset Ninja-Release
     ```
    - The built binaries will be in `./plugins`
 
