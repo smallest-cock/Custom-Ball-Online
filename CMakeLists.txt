@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.0)
 
-project(CustomBallOnline VERSION 2.2.12)
+project(CustomBallOnline VERSION 2.2.13)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -32,7 +32,7 @@ set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/external")
 
 set(BMSDK_DIR "${EXTERNAL_DIR}/BMSDK")
 
-set(RLSDK_DIR "${EXTERNAL_DIR}/RLSDK/RLSDK_w_pch_includes")
+set(RLSDK_DIR "${EXTERNAL_DIR}/RLSDK/RLSDK")
 set(RLSDK_SRC
     ${RLSDK_DIR}/GameDefines.cpp
     # ${RLSDK_DIR}/SDK_HEADERS/AkAudio_classes.cpp
@@ -73,7 +73,7 @@ set(MODUTILS_SRC
 add_link_options(/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF)
 
 add_compile_options(${compile_options})
-add_compile_definitions(UNICODE _UNICODE)
+add_compile_definitions(UNICODE _UNICODE USE_PCH)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 4)
     message(FATAL_ERROR

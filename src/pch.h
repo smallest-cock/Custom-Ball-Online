@@ -26,7 +26,7 @@
 #include <json/single_include/nlohmann/json.hpp>
 
 #define USE_GMALLOC
-#include <RLSDK/RLSDK_w_pch_includes/SdkHeaders.hpp>
+#include <RLSDK/RLSDK/SdkHeaders.hpp>
 
 #include "logging.h"
 
