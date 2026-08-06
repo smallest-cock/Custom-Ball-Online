@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.2.15
+- Updated internal SDK to match latest RL version (v2.72)
+
 ## v2.2.14
 - Fix startup failure due to outdated GNames pattern
 
