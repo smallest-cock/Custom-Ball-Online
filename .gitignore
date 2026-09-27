@@ -5,3 +5,4 @@ build
 plugins
 
 CMakeUserPresets.json
+post-build-linux.sh

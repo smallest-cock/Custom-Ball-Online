@@ -19,12 +19,21 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(compile_options
     /std:c++20
     /EHsc
-    /MP
-
     /Zi # generate debug info
     /O2 # optimize
     /bigobj # handle the massive rlsdk files
 )
+
+# suppress Clang-specific warnings (that MSVC ignores)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(
+        -Wno-nontrivial-memcall
+        -Wno-sizeof-array-argument
+        -Wno-absolute-value
+        -Wno-deprecated-enum-enum-conversion
+        -Wno-extra-qualification
+    )
+endif()
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(COMPONENTS_DIR "${SRC_DIR}/components")
@@ -118,14 +127,26 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     WINDOWS_EXPORT_ALL_SYMBOLS OFF
 )
 
-if(NOT "$ENV{CI}" STREQUAL "true" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set(INSTALLED_BMSDK_DIR "$ENV{APPDATA}/bakkesmod/bakkesmod/bakkesmodsdk"
-        CACHE PATH "Installed BakkesMod SDK directory")
+if(NOT "$ENV{CI}" STREQUAL "true")
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+        set(INSTALLED_BMSDK_DIR "$ENV{APPDATA}/bakkesmod/bakkesmod/bakkesmodsdk"
+            CACHE PATH "Installed BakkesMod SDK directory")
 
-    add_custom_command(
-        TARGET ${PROJECT_NAME}
-        POST_BUILD
-        COMMAND "${INSTALLED_BMSDK_DIR}/bakkesmod-patch.exe" "$<TARGET_FILE:${PROJECT_NAME}>"
-        COMMENT "Running bakkesmod-patch.exe after building ${PROJECT_NAME}"
-    )
+        add_custom_command(
+            TARGET ${PROJECT_NAME}
+            POST_BUILD
+            COMMAND "${INSTALLED_BMSDK_DIR}/bakkesmod-patch.exe" "$<TARGET_FILE:${PROJECT_NAME}>"
+            COMMENT "Running bakkesmod-patch.exe after building ${PROJECT_NAME}"
+        )
+    else()
+        set(_post_build_script "${CMAKE_SOURCE_DIR}/scripts/post-build-linux.sh")
+        if(EXISTS "${_post_build_script}")
+            add_custom_command(
+                TARGET ${PROJECT_NAME}
+                POST_BUILD
+                COMMAND bash "${_post_build_script}" "$<TARGET_FILE:${PROJECT_NAME}>"
+                COMMENT "Running local (linux) post-build hook after building ${PROJECT_NAME}"
+            )
+        endif()
+    endif()
 endif()

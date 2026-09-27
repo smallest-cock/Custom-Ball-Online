@@ -23,7 +23,7 @@ void CustomBallOnline::onLoad()
 	initCommands();
 	initHooks();
 
-	UFunction::FindFunction("dummy to trigger function cache");
+	UFunction::FindFunction("they glow in the dark");
 
 	LOG("Custom Ball Online has loaded :)");
 }
