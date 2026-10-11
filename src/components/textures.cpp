@@ -1,14 +1,13 @@
 #include "pch.h"
-#include "Textures.hpp"
-#include "Events.hpp"
-#include "Macros.hpp"
+#include "textures.hpp"
+#include "../events.hpp"
+#include "../util/macros.hpp"
 
 // ##############################################################################################################
 // #############################################    INIT    #####################################################
 // ##############################################################################################################
 
-void TexturesComponent::init(const std::shared_ptr<GameWrapper>& gw, const std::shared_ptr<const bool>& enabledFlag)
-{
+void TexturesComponent::init(const std::shared_ptr<GameWrapper> &gw, const std::shared_ptr<const bool> &enabledFlag) {
 	gameWrapper     = gw;
 	m_pluginEnabled = enabledFlag;
 
@@ -19,20 +18,17 @@ void TexturesComponent::init(const std::shared_ptr<GameWrapper>& gw, const std::
 	searchForBallSkins();
 }
 
-void TexturesComponent::initPaths()
-{
+void TexturesComponent::initPaths() {
 	fs::path dataFolderPath = gameWrapper->GetDataFolder();
 
-	if (!fs::exists(dataFolderPath))
-	{
+	if (!fs::exists(dataFolderPath)) {
 		LOG("[ERROR] Unable to resolve bakkesmod data folder path");
 		return;
 	}
 
 	m_ballTexturesFolder = dataFolderPath / "CustomBallOnline" / "BallTextures";
 
-	if (!fs::exists(m_ballTexturesFolder))
-	{
+	if (!fs::exists(m_ballTexturesFolder)) {
 		if (fs::create_directories(m_ballTexturesFolder)) // creates sub folders as well. noice
 			LOG("Path didn't exist, so it was created: {}", m_ballTexturesFolder.string());
 		else
@@ -40,8 +36,7 @@ void TexturesComponent::initPaths()
 	}
 }
 
-void TexturesComponent::initCvars()
-{
+void TexturesComponent::initCvars() {
 	// bools
 	registerCvar_bool(Cvars::clearUnusedTexturesOnLoading, false).bindTo(m_clearUnusedTexturesOnLoadingScreens);
 
@@ -50,129 +45,146 @@ void TexturesComponent::initCvars()
 	    .bindTo(m_selectedTextureStr); // put back to default "", after done testing
 }
 
-void TexturesComponent::initHooks()
-{
-	hookEventPost(Events::EngineShare_X_EventPreLoadMap,
-	    [this](std::string event)
-	    {
-		    DEBUGLOG("[HOOK]: {}", event);
+void TexturesComponent::initHooks() {
+	hookEventPost(Events::EngineShare_X_EventPreLoadMap, [this](std::string event) {
+		DEBUGLOG("[HOOK]: {}", event);
 
-		    if (!*m_pluginEnabled || !*m_clearUnusedTexturesOnLoadingScreens)
-			    return;
+		if (!*m_pluginEnabled || !*m_clearUnusedTexturesOnLoadingScreens)
+			return;
 
-		    runCommand(Commands::clearUnusedSavedTextures);
-	    });
+		runCommand(Commands::clearUnusedSavedTextures);
+	});
 
-	hookEventPost(Events::EngineShare_X_EventPreLoadMap,
-	    [this](std::string event)
-	    {
-		    DEBUGLOG("[HOOK]: {}", event);
+	hookEventPost(Events::EngineShare_X_EventPreLoadMap, [this](std::string event) {
+		DEBUGLOG("[HOOK]: {}", event);
 
-		    if (!*m_pluginEnabled || !*m_clearUnusedTexturesOnLoadingScreens)
-			    return;
+		if (!*m_pluginEnabled || !*m_clearUnusedTexturesOnLoadingScreens)
+			return;
 
-		    runCommand(Commands::clearUnusedSavedTextures);
-	    });
+		runCommand(Commands::clearUnusedSavedTextures);
+	});
 
 	// this exists bc not sure if FXActor_Ball_TA::StartBallFadeIn will be called
 	// when replacing a bot
-	hookEventPost(Events::GFxHUD_TA_HandleReplaceBot,
-	    [this](std::string event)
-	    {
-		    // return;
+	hookEventPost(Events::GFxHUD_TA_HandleReplaceBot, [this](std::string event) {
+		LOG("[HOOK]: {}", event);
+		if (!*m_pluginEnabled)
+			return;
 
-		    LOG("[HOOK]: {}", event);
-		    if (!*m_pluginEnabled)
-			    return;
+		if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay())
+			return;
 
-		    if (gameWrapper->IsInFreeplay() || gameWrapper->IsInReplay())
-			    return;
+		runCommand(Commands::applyTexture);
+	});
 
-		    runCommand(Commands::applyTexture);
-	    });
+	// ############################################################################################################
+	// testing
+	// ############################################################################################################
 
-	// might not be necessary given the FXActor_Ball_TA::StartBallFadeIn super
-	// hook
-	// ... but still enabled bc not sure if FXActor_Ball_TA::StartBallFadeIn is
-	// called in casual intermission lobby and getting in a casual intermission
-	// lobby is hard to test. unless there's a way to do it manually
-	hookEventPost(Events::PlayWithBall_BeginState,
-	    [this](std::string event)
-	    {
-		    LOG("[HOOK]: {}", event);
-		    if (!*m_pluginEnabled)
-			    return;
+	auto applySkinOnLobbyGameEvent = [this](ActorWrapper Caller, void *Params, std::string eventName) -> void {
+		LOG("[HOOK]: {}", eventName);
 
-		    runCommand(Commands::applyTexture);
-	    });
+		if (!*m_pluginEnabled)
+			return;
+
+		if (!Caller.memory_address) {
+			LOGERROR("Caller is null in post hook for {}", eventName);
+			return;
+		}
+
+		auto *ge = UnrealCast<AGameEvent_Lobby_TA>(reinterpret_cast<UObject *>(Caller.memory_address));
+		if (!ge) {
+			LOGERROR("Caller isn't a valid AGameEvent_Lobby_TA in post hook for {}", eventName);
+			return;
+		}
+		LOG("Valid AGameEvent_Lobby_TA detected: {}", ge->GetName());
+
+		auto *skin = getSelectedSkin();
+		if (!skin)
+			return;
+
+		applySkinToBallDissolveMIC(*skin);
+		applySkinToBall(ge->Ball, *skin);
+		applySkinToBallArchetype(ge->BallArchetype, *skin);
+	};
+
+	// ############################################################################################################
+
+	auto applySkinToAllBalls = [this](std::string eventName) -> void {
+		LOG("[HOOK]: {}", eventName);
+
+		if (!*m_pluginEnabled)
+			return;
+
+		auto *skin = getSelectedSkin();
+		if (!skin)
+			return;
+
+		auto balls = Instances.getAllInstancesOf<ABall_TA>();
+		LOG("Num ABall_TA ptrs found in GObjects: {}", balls.size());
+		for (auto *ball : balls) {
+			applySkinToBall(ball, *skin);
+		}
+	};
+
+	// NOTE: this is the hook that applies skin in casual intermission
+	hookEventPost(Events::PlayWithBall_BeginState, applySkinToAllBalls);
 
 	// super hook... even gets fired when skipping to different times in a replay
-	hookWithCallerPost(Events::FXActor_Ball_TA_StartBallFadeIn,
-	    [this](ActorWrapper Caller, void* Params, std::string event)
-	    {
-		    LOG("[HOOK POST]: {}", event);
-		    if (!*m_pluginEnabled)
-			    return;
+	hookWithCallerPost(Events::FXActor_Ball_TA_StartBallFadeIn, [this](ActorWrapper Caller, void *Params, std::string event) {
+		LOG("[HOOK POST]: {}", event);
+		if (!*m_pluginEnabled)
+			return;
 
-		    auto* caller = reinterpret_cast<AFXActor_Ball_TA*>(Caller.memory_address);
-		    if (!validUObject(caller))
-			    return;
+		auto *caller = reinterpret_cast<AFXActor_Ball_TA *>(Caller.memory_address);
+		if (!validUObject(caller))
+			return;
 
-		    auto* ball = caller->Ball;
-		    if (!validUObject(ball))
-			    return;
+		auto *ball = caller->Ball;
+		if (!validUObject(ball))
+			return;
 
-		    auto* skin = getSelectedSkin();
-		    if (!skin)
-			    return;
+		auto *skin = getSelectedSkin();
+		if (!skin)
+			return;
 
-		    applySkinToBallAndArchetype(ball, *skin);
-		    applySkinToBallDissolveMIC(*skin);
-	    });
+		applySkinToBallAndArchetype(ball, *skin);
+		// applySkinToBallDissolveMIC(*skin);
+	});
 }
 
-void TexturesComponent::initCommands()
-{
-	registerCommand(Commands::applyTexture,
-	    [this](...)
-	    {
-		    if (!*m_pluginEnabled)
-			    return;
+void TexturesComponent::initCommands() {
+	registerCommand(Commands::applyTexture, [this](...) {
+		if (!*m_pluginEnabled)
+			return;
 
-		    applySelectedSkinToAllBalls();
-	    });
+		applySelectedSkinToAllBalls();
+	});
 
-	registerCommand(Commands::clearSavedTextures,
-	    [this](...)
-	    {
-		    if (!*m_pluginEnabled)
-			    return;
+	registerCommand(Commands::clearSavedTextures, [this](...) {
+		if (!*m_pluginEnabled)
+			return;
 
-		    clearCreatedTextures();
-	    });
+		clearCreatedTextures();
+	});
 
-	registerCommand(Commands::clearUnusedSavedTextures,
-	    [this](...)
-	    {
-		    if (!*m_pluginEnabled)
-			    return;
+	registerCommand(Commands::clearUnusedSavedTextures, [this](...) {
+		if (!*m_pluginEnabled)
+			return;
 
-		    clearUnusedCreatedTextures();
-	    });
+		clearUnusedCreatedTextures();
+	});
 }
 
-// search for ball skins in BallTextures folder
-void TexturesComponent::searchForBallSkins()
-{
+// searches recursively for ball skins in the BallTextures folder
+void TexturesComponent::searchForBallSkins() {
 	// yeet old data
-	for (auto& [skinName, data] : m_savedTextureData)
+	for (auto &[skinName, data] : m_savedTextureData)
 		data.clearLoadedTextures();
 	m_savedTextureData.clear();
 
-	try
-	{
-		for (const auto& entry : fs::recursive_directory_iterator(m_ballTexturesFolder))
-		{
+	try {
+		for (const auto &entry : fs::recursive_directory_iterator(m_ballTexturesFolder)) {
 			if (!entry.is_regular_file() || Format::ToLower(entry.path().extension().string()) != ".json")
 				continue;
 
@@ -182,14 +194,12 @@ void TexturesComponent::searchForBallSkins()
 
 			std::error_code ec;
 			fs::path        relPathToJsonFile = fs::relative(entry.path(), m_ballTexturesFolder, ec);
-			if (ec)
-			{
+			if (ec) {
 				LOGERROR("Cannot get relative path to JSON file: {}", ec.message());
 				continue;
 			}
 
-			for (const auto& [name, obj] : data.items())
-			{
+			for (const auto &[name, obj] : data.items()) {
 				BallSkinData skin{};
 				if (!skin.fromJson(name, obj, entry.path()))
 					continue;
@@ -198,9 +208,7 @@ void TexturesComponent::searchForBallSkins()
 				m_savedTextureData[keyName] = skin;
 			}
 		}
-	}
-	catch (const fs::filesystem_error& e)
-	{
+	} catch (const fs::filesystem_error &e) {
 		LOGERROR("Unable access or parse files in directory: {}", m_ballTexturesFolder.string());
 		return;
 	}
@@ -216,19 +224,16 @@ void TexturesComponent::searchForBallSkins()
 // ###############################################    FUNCTIONS    ##############################################
 // ##############################################################################################################
 
-BallSkinData* TexturesComponent::getSelectedSkin()
-{
+BallSkinData *TexturesComponent::getSelectedSkin() {
 	auto it = m_savedTextureData.find(*m_selectedTextureStr);
 	if (it == m_savedTextureData.end())
 		return nullptr;
 
-	auto& skin = it->second;
+	auto &skin = it->second;
 
-	if (!skin.bTexturesLoaded)
-	{
+	if (!skin.bTexturesLoaded) {
 		// load textures if they haven't already been loaded
-		if (!skin.loadTextures())
-		{
+		if (!skin.loadTextures()) {
 			LOGERROR("Unable to load textures for skin: \"{}\"", *m_selectedTextureStr);
 			return nullptr;
 		}
@@ -237,54 +242,56 @@ BallSkinData* TexturesComponent::getSelectedSkin()
 	return &skin;
 }
 
-void TexturesComponent::applySelectedSkinToAllBalls()
-{
-	auto* skin = getSelectedSkin();
+void TexturesComponent::applySelectedSkinToAllBalls() {
+	auto *skin = getSelectedSkin();
 	if (!skin)
 		return;
 
-	// apply skin to ball dissolve MIC
 	applySkinToBallDissolveMIC(*skin);
 
-	// get game event
-	auto* maybeEvent = Instances.getGameEvent();
-	if (!validUObject(maybeEvent) || !maybeEvent->IsA<AGameEvent_Soccar_TA>())
-	{
+	auto *event = Instances.getGameEvent();
+	if (!validUObject(event) || (!event->IsA<AGameEvent_Soccar_TA>() && !event->IsA<AGameEvent_Lobby_TA>())) {
 		LOGERROR("No valid game event found");
 		return;
 	}
-	auto* gameEvent = static_cast<AGameEvent_Soccar_TA*>(maybeEvent);
 
-	// apply skin to game balls & ball archetype
-	LOG("Num game balls found: {}", gameEvent->GameBalls.size());
-	for (ABall_TA* ball : gameEvent->GameBalls)
-		applySkinToBall(ball, *skin);
+	LOG("Valid game event detected: {}", event->GetName());
 
-	applySkinToBallArchetype(gameEvent->BallArchetype, *skin);
+	if (event->IsA<AGameEvent_Soccar_TA>()) {
+		auto *gameEvent = static_cast<AGameEvent_Soccar_TA *>(event);
+
+		LOG("Num game balls found: {}", gameEvent->GameBalls.size());
+		for (ABall_TA *ball : gameEvent->GameBalls)
+			applySkinToBall(ball, *skin);
+		applySkinToBallArchetype(gameEvent->BallArchetype, *skin);
+	} else if (event->IsA<AGameEvent_Lobby_TA>()) {
+		auto *gameEvent = static_cast<AGameEvent_Lobby_TA *>(event);
+
+		applySkinToBall(gameEvent->Ball, *skin);
+		applySkinToBallArchetype(gameEvent->BallArchetype, *skin);
+	}
 }
 
-void TexturesComponent::applySkinToBall(ABall_TA* ball, const BallSkinData& skin)
-{
-	if (!validUObject(ball))
+void TexturesComponent::applySkinToBall(ABall_TA *ball, const BallSkinData &skin) {
+	if (!validUObject(ball)) {
+		LOGERROR("ABall_TA is null in applySkinToBall");
 		return;
+	}
 
-	UStaticMeshComponent* mesh = ball->StaticMesh;
-	if (!validUObject(mesh))
-	{
+	UStaticMeshComponent *mesh = ball->StaticMesh;
+	if (!validUObject(mesh)) {
 		LOG("WHOA BUDDY: ball->StaticMesh is invalid");
 		return;
 	}
 
-	UMaterialInstanceConstant* mic = nullptr;
+	UMaterialInstanceConstant *mic = nullptr;
 	if (mesh->Materials.empty())
 		mic = mesh->ConditionalCreateMIC(0);
-	else if (auto* existingMI = mesh->GetMaterial(0))
-	{
+	else if (auto *existingMI = mesh->GetMaterial(0)) {
 		if (validUObject(existingMI) && existingMI->IsA<UMaterialInstanceConstant>())
-			mic = static_cast<UMaterialInstanceConstant*>(existingMI);
+			mic = static_cast<UMaterialInstanceConstant *>(existingMI);
 	}
-	if (!validUObject(mic))
-	{
+	if (!validUObject(mic)) {
 		LOGERROR("UMaterialInstanceConstant* (from mesh->ConditionalCreateMIC(0) "
 		         "or mesh->GetMaterial(0)) is invalid");
 		return;
@@ -300,21 +307,18 @@ void TexturesComponent::applySkinToBall(ABall_TA* ball, const BallSkinData& skin
 	        mesh->GetFullName());
 	*/
 
-	for (const auto& [paramName, tex] : skin.paramTextures)
-	{
+	for (const auto &[paramName, tex] : skin.paramTextures) {
 		if (!validUObject(tex.texture))
 			continue;
 
-		FName param{std::wstring(paramName.begin(), paramName.end()).c_str()};
+		FName param{ std::wstring(paramName.begin(), paramName.end()).c_str() };
 
-		UTexture* existingTex = nullptr;
-		if (!mic->GetTextureParameterValue(param, existingTex))
-		{
+		UTexture *existingTex = nullptr;
+		if (!mic->GetTextureParameterValue(param, existingTex)) {
 			LOGERROR("Couldn't get {} texture param value from ball mesh MIC", paramName);
 			continue;
 		}
-		if (existingTex == tex.texture)
-		{
+		if (existingTex == tex.texture) {
 			LOG("Custom {} texture already exists on ball mesh MIC", paramName);
 			continue;
 		}
@@ -324,49 +328,44 @@ void TexturesComponent::applySkinToBall(ABall_TA* ball, const BallSkinData& skin
 	}
 }
 
-void TexturesComponent::applySkinToBallArchetype(ABall_TA* arch, const BallSkinData& skin)
-{
-	if (!validUObject(arch))
+void TexturesComponent::applySkinToBallArchetype(ABall_TA *arch, const BallSkinData &skin) {
+	if (!validUObject(arch)) {
+		LOGERROR("ABall_TA* archetype is null in applySkinToBallArchetype");
 		return;
+	}
 
-	UStaticMeshComponent* mesh = arch->StaticMesh;
-	if (!validUObject(mesh))
-	{
+	UStaticMeshComponent *mesh = arch->StaticMesh;
+	if (!validUObject(mesh)) {
 		LOGERROR("UStaticMeshComponent* from arch->StaticMesh is invalid");
 		return;
 	}
 
-	UMaterialInstanceConstant* mic = nullptr;
+	UMaterialInstanceConstant *mic = nullptr;
 	if (mesh->Materials.empty())
 		mic = mesh->ConditionalCreateMIC(0);
-	else if (auto* existingMI = mesh->GetMaterial(0))
-	{
+	else if (auto *existingMI = mesh->GetMaterial(0)) {
 		if (validUObject(existingMI) && existingMI->IsA<UMaterialInstanceConstant>())
-			mic = static_cast<UMaterialInstanceConstant*>(existingMI);
+			mic = static_cast<UMaterialInstanceConstant *>(existingMI);
 	}
-	if (!validUObject(mic))
-	{
+	if (!validUObject(mic)) {
 		LOGERROR("UMaterialInstanceConstant* (from mesh->ConditionalCreateMIC(0) "
 		         "or mesh->GetMaterial(0)) is invalid");
 		return;
 	}
 
 	// apply texture(s)
-	for (const auto& [paramName, tex] : skin.paramTextures)
-	{
+	for (const auto &[paramName, tex] : skin.paramTextures) {
 		if (!validUObject(tex.texture))
 			continue;
 
-		FName param{std::wstring(paramName.begin(), paramName.end()).c_str()};
+		FName param{ std::wstring(paramName.begin(), paramName.end()).c_str() };
 
-		UTexture* existingTex = nullptr;
-		if (!mic->GetTextureParameterValue(param, existingTex))
-		{
+		UTexture *existingTex = nullptr;
+		if (!mic->GetTextureParameterValue(param, existingTex)) {
 			LOGERROR("Couldn't get {} texture param value from ball archetype MIC", paramName);
 			continue;
 		}
-		if (existingTex == tex.texture)
-		{
+		if (existingTex == tex.texture) {
 			LOG("Custom {} texture already exists on ball archetype MIC", paramName);
 			continue;
 		}
@@ -376,38 +375,33 @@ void TexturesComponent::applySkinToBallArchetype(ABall_TA* arch, const BallSkinD
 	}
 }
 
-void TexturesComponent::applySkinToBallAndArchetype(ABall_TA* ball, const BallSkinData& skin)
-{
+void TexturesComponent::applySkinToBallAndArchetype(ABall_TA *ball, const BallSkinData &skin) {
 	applySkinToBall(ball, skin);
-	applySkinToBallArchetype(InstancesComponent::getArchetype<ABall_TA>(ball), skin);
+	ABall_TA *arch = InstancesComponent::getArchetype<ABall_TA>(ball);
+	applySkinToBallArchetype(arch, skin);
+	applySkinToBallDissolveMIC(skin, arch);
 }
 
-void TexturesComponent::applySkinToBallDissolveMIC(const BallSkinData& skin)
-{
-	// search thru GObjects every time here until we find a more efficient way
-	UMaterialInstanceConstant* ballDissolveMIC = getBallDissolveMIC();
-	if (!ballDissolveMIC)
-	{
+void TexturesComponent::applySkinToBallDissolveMIC(const BallSkinData &skin, ABall_TA *ball) {
+	UMaterialInstanceConstant *ballDissolveMIC = getBallDissolveMIC(ball);
+	if (!ballDissolveMIC) {
 		LOGERROR("Unable to get valid ball dissolve MIC");
 		return;
 	}
 
 	// apply texture(s)
-	for (const auto& [paramName, tex] : skin.paramTextures)
-	{
+	for (const auto &[paramName, tex] : skin.paramTextures) {
 		if (!validUObject(tex.texture))
 			continue;
 
-		FName param{std::wstring(paramName.begin(), paramName.end()).c_str()};
+		FName param{ std::wstring(paramName.begin(), paramName.end()).c_str() };
 
-		UTexture* existingTex = nullptr;
-		if (!ballDissolveMIC->GetTextureParameterValue(param, existingTex))
-		{
+		UTexture *existingTex = nullptr;
+		if (!ballDissolveMIC->GetTextureParameterValue(param, existingTex)) {
 			LOGERROR("Couldn't get {} texture param value from ball dissolve MIC", paramName);
 			continue;
 		}
-		if (existingTex == tex.texture)
-		{
+		if (existingTex == tex.texture) {
 			LOG("Custom {} texture already exists on ball dissolve MIC", paramName);
 			continue;
 		}
@@ -417,35 +411,49 @@ void TexturesComponent::applySkinToBallDissolveMIC(const BallSkinData& skin)
 	}
 }
 
-// TODO: maybe perhaps put this it in Instances
-UMaterialInstanceConstant* TexturesComponent::getBallDissolveMIC()
-{
-	for (int32_t i = (UObject::GObjObjects()->size() - INSTANCES_INTERATE_OFFSET); i > 0; --i)
-	{
-		UObject* uObject = UObject::GObjObjects()->at(i);
-		if (!validUObject(uObject) || !uObject->IsA<UMaterialInstanceConstant>())
-			continue;
+auto TexturesComponent::getBallDissolveMIC(ABall_TA *ball) -> UMaterialInstanceConstant * {
+	if (ball == nullptr) {
+		// crude search thru GObjects
+		for (int32_t i = (UObject::GObjObjects()->size() - INSTANCES_INTERATE_OFFSET); i > 0; --i) {
+			UObject *uObject = UObject::GObjObjects()->at(i);
+			if (!validUObject(uObject) || !uObject->IsA<UMaterialInstanceConstant>())
+				continue;
 
-		if (uObject->GetName().find("BallDissolve_Soccar") != 0)
-			continue;
+			if (uObject->GetName().find("BallDissolve_Soccar") != 0)
+				continue;
 
-		LOG("Found ball dissolve MIC in GObjects...");
-		return static_cast<UMaterialInstanceConstant*>(uObject);
+			LOG("Found ball dissolve MIC in GObjects (index {})", i);
+			return static_cast<UMaterialInstanceConstant *>(uObject); // WARNING: assumes the MI is a MIC without any validation
+		}
+	} else {
+		// change dissolve MIC from ball->FadeMaterials
+		if (!validUObject(ball)) {
+			LOGERROR("ABall_TA ptr is invalid in getBallDissolveMIC");
+			return nullptr;
+		}
+
+		LOG("Found {} UMaterialInterface ptrs in ball->FadeMaterials", ball->FadeMaterials.size());
+		for (auto *mi : ball->FadeMaterials) {
+			if (!validUObject(mi))
+				continue;
+			if (mi->GetName().find("BallDissolve_Soccar") == 0) {
+				LOG("Found ball dissolve MIC in ball->FadeMaterials");
+				return static_cast<UMaterialInstanceConstant *>(mi); // WARNING: assumes the MI is a MIC without any validation
+			}
+		}
 	}
 
 	return nullptr;
 }
 
 // #define USE_BM_METHOD
-UTexture2DDynamic* TexturesComponent::imgPathToTexture(const fs::path& imgPath, bool markInvincible)
-{
+UTexture2DDynamic *TexturesComponent::imgPathToTexture(const fs::path &imgPath, bool markInvincible) {
 #ifdef USE_BM_METHOD
 
 	// ez BM method
 	auto               image     = ImageWrapper(imgPath, true);
-	UTexture2DDynamic* customTex = reinterpret_cast<UTexture2DDynamic*>(image.GetCanvasTex());
-	if (!validUObject(customTex))
-	{
+	UTexture2DDynamic *customTex = reinterpret_cast<UTexture2DDynamic *>(image.GetCanvasTex());
+	if (!validUObject(customTex)) {
 		LOGERROR("UTexture2DDynamic* from ImageWrapper is invalid");
 		return nullptr;
 	}
@@ -455,8 +463,7 @@ UTexture2DDynamic* TexturesComponent::imgPathToTexture(const fs::path& imgPath, 
 #else
 
 	// RLSDK method
-	if (!fs::exists(imgPath))
-	{
+	if (!fs::exists(imgPath)) {
 		LOGERROR("Path doesn't exist: \"{}\"", imgPath.string());
 		return nullptr;
 	}
@@ -465,9 +472,8 @@ UTexture2DDynamic* TexturesComponent::imgPathToTexture(const fs::path& imgPath, 
 	if (!getImgBytes(imgPath, imgBytes))
 		return nullptr;
 
-	UTexture2DDynamic* customTex = Instances.CreateInstance<UTexture2DDynamic>();
-	if (!customTex)
-	{
+	UTexture2DDynamic *customTex = Instances.CreateInstance<UTexture2DDynamic>();
+	if (!customTex) {
 		LOGERROR("Failed to create UTexture2DDynamic instance");
 		return nullptr;
 	}
@@ -489,16 +495,11 @@ UTexture2DDynamic* TexturesComponent::imgPathToTexture(const fs::path& imgPath, 
 	// check file extension and update texture accordingly
 	std::string imgExtension = Format::ToLower(imgPath.extension().string());
 
-	if (imgExtension == ".png")
-	{
+	if (imgExtension == ".png") {
 		customTex->UpdateMipFromPNG(0, imgBytes);
-	}
-	else if (imgExtension == ".jpg" || imgExtension == ".jpeg")
-	{
+	} else if (imgExtension == ".jpg" || imgExtension == ".jpeg") {
 		customTex->UpdateMipFromJPEG(0, imgBytes);
-	}
-	else
-	{
+	} else {
 		LOGERROR("Invalid image format. Please make sure your image is a 32-bit "
 		         "PNG or JPEG");
 		return nullptr;
@@ -512,8 +513,7 @@ UTexture2DDynamic* TexturesComponent::imgPathToTexture(const fs::path& imgPath, 
 #endif // USE_BM_METHOD
 }
 
-bool TexturesComponent::getImgBytes(const fs::path& imgPath, TArray<uint8_t>& outBytes)
-{
+bool TexturesComponent::getImgBytes(const fs::path &imgPath, TArray<uint8_t> &outBytes) {
 	// if (savedImgBytes.contains(imagePath))
 	//{
 	//	LOG("yeee we already have it :))");
@@ -525,19 +525,15 @@ bool TexturesComponent::getImgBytes(const fs::path& imgPath, TArray<uint8_t>& ou
 	int fileSize = UFileSystem::GetFileSize(pathFstr);
 	LOG("UFileSystem::GetFileSize() fileSize: {}", fileSize);
 
-	if (fileSize <= 1)
-	{
+	if (fileSize <= 1) {
 		LOGERROR("\"{}\" is empty (not enough bytes)", imgPath.string());
 		return false;
 	}
 
-	if (UFileSystem::LoadFileToBytes(pathFstr, 0, fileSize, outBytes))
-	{
+	if (UFileSystem::LoadFileToBytes(pathFstr, 0, fileSize, outBytes)) {
 		LOG("TArray<uint8_t> image bytes has {} elements", outBytes.size());
 		return true;
-	}
-	else
-	{
+	} else {
 		LOGERROR("UFileSystem::LoadFileToBytes(...) returned false. Image might be "
 		         "invalid",
 		    outBytes.size());
@@ -545,11 +541,9 @@ bool TexturesComponent::getImgBytes(const fs::path& imgPath, TArray<uint8_t>& ou
 	}
 }
 
-void TexturesComponent::clearCreatedTextures()
-{
+void TexturesComponent::clearCreatedTextures() {
 	int numSkinsCleared = 0;
-	for (auto& [name, skin] : m_savedTextureData)
-	{
+	for (auto &[name, skin] : m_savedTextureData) {
 		skin.clearLoadedTextures();
 		numSkinsCleared++;
 	}
@@ -558,11 +552,9 @@ void TexturesComponent::clearCreatedTextures()
 		LOG("Cleared textures for {} skins", numSkinsCleared);
 }
 
-void TexturesComponent::clearUnusedCreatedTextures()
-{
+void TexturesComponent::clearUnusedCreatedTextures() {
 	int numSkinsCleared = 0;
-	for (auto& [name, skin] : m_savedTextureData)
-	{
+	for (auto &[name, skin] : m_savedTextureData) {
 		if (name == *m_selectedTextureStr)
 			continue;
 
@@ -574,15 +566,13 @@ void TexturesComponent::clearUnusedCreatedTextures()
 		LOG("Cleared textures for {} unused skins", numSkinsCleared);
 }
 
-void TexturesComponent::createSkinJsonFile(const SkinJsonDataForImgui& skinData)
-{
-	if (!fs::exists(m_ballTexturesFolder))
-	{
+void TexturesComponent::createSkinJsonFile(const SkinJsonDataForImgui &skinData) {
+	if (!fs::exists(m_ballTexturesFolder)) {
 		LOGERROR("BallTextures folder does not exist.");
 		return;
 	}
 
-	SkinJsonData skin{skinData};
+	SkinJsonData skin{ skinData };
 	if (!skin.validateData(m_ballTexturesFolder))
 		return;
 
@@ -590,8 +580,7 @@ void TexturesComponent::createSkinJsonFile(const SkinJsonDataForImgui& skinData)
 	fs::path jsonFilePath = m_ballTexturesFolder / skin.jsonFileName;
 
 	std::ofstream outFile(jsonFilePath);
-	if (outFile.is_open())
-	{
+	if (outFile.is_open()) {
 		outFile << jsonData.dump(4);
 		outFile.close();
 
@@ -599,8 +588,7 @@ void TexturesComponent::createSkinJsonFile(const SkinJsonDataForImgui& skinData)
 		LOG("Successfully created JSON file: {}", jsonFilePath.string());
 
 		searchForBallSkins();
-	}
-	else
+	} else
 		LOGERROR("Failed to write JSON file: {}", jsonFilePath.string());
 }
 
@@ -608,11 +596,9 @@ void TexturesComponent::createSkinJsonFile(const SkinJsonDataForImgui& skinData)
 // #########################################    DISPLAY FUNCTIONS    ############################################
 // ##############################################################################################################
 
-void TexturesComponent::display()
-{
+void TexturesComponent::display() {
 	auto clearUnusedTexturesOnLoading_cvar = getCvar(Cvars::clearUnusedTexturesOnLoading);
-	if (!clearUnusedTexturesOnLoading_cvar)
-	{
+	if (!clearUnusedTexturesOnLoading_cvar) {
 		ImGui::Text("wtf, \"%s\" cvar is null", Cvars::clearUnusedTexturesOnLoading.name);
 		return;
 	}
@@ -636,8 +622,7 @@ void TexturesComponent::display()
 
 	GUI::Spacing(4);
 
-	if (ImGui::CollapsingHeader("JSON creator"))
-	{
+	if (ImGui::CollapsingHeader("JSON creator")) {
 		GUI::ScopedIndent indent{};
 		display_skinJsonCreator();
 
@@ -646,15 +631,13 @@ void TexturesComponent::display()
 
 	GUI::Spacing(8);
 
-	if (ImGui::Button("Clear all cached textures"))
-	{
+	if (ImGui::Button("Clear all cached textures")) {
 		GAME_THREAD_EXECUTE({ runCommand(Commands::clearSavedTextures); });
 	}
 
 	ImGui::Spacing();
 
-	if (ImGui::Button("Clear unused cached textures"))
-	{
+	if (ImGui::Button("Clear unused cached textures")) {
 		GAME_THREAD_EXECUTE({ runCommand(Commands::clearUnusedSavedTextures); });
 	}
 
@@ -662,29 +645,24 @@ void TexturesComponent::display()
 
 	// list of saved texture info
 	uint8_t numCachedSkins = 0;
-	if (!Textures.m_savedTextureData.empty())
-	{
-		if (ImGui::CollapsingHeader("Cached texture data"))
-		{
+	if (!Textures.m_savedTextureData.empty()) {
+		if (ImGui::CollapsingHeader("Cached texture data")) {
 			GUI::ScopedIndent indent{};
 
 			GUI::Spacing(2);
 
-			for (const auto& [skinName, skinData] : m_savedTextureData)
-			{
+			for (const auto &[skinName, skinData] : m_savedTextureData) {
 				if (skinData.paramTextures.empty() || !skinData.bTexturesLoaded)
 					continue;
 
-				GUI::ScopedID id{&skinData};
+				GUI::ScopedID id{ &skinData };
 				numCachedSkins++;
 
-				if (ImGui::CollapsingHeader(skinName.c_str()))
-				{
-					GUI::ScopedIndent ok{50.0f};
+				if (ImGui::CollapsingHeader(skinName.c_str())) {
+					GUI::ScopedIndent ok{ 50.0f };
 
-					for (const auto& [paramName, texData] : skinData.paramTextures)
-					{
-						GUI::ScopedID id{&texData};
+					for (const auto &[paramName, texData] : skinData.paramTextures) {
+						GUI::ScopedID id{ &texData };
 
 						std::string txt = std::format("{}:\t{}", paramName, texData.imgPath.string());
 						ImGui::Text("%s", txt.c_str());
@@ -708,8 +686,7 @@ void TexturesComponent::display()
 	GUI::Spacing(2);
 }
 
-void TexturesComponent::display_skinDropdown()
-{
+void TexturesComponent::display_skinDropdown() {
 	auto selectedTexture_cvar = getCvar(Cvars::selectedTexture);
 	if (!selectedTexture_cvar)
 		return;
@@ -717,15 +694,13 @@ void TexturesComponent::display_skinDropdown()
 	char searchBuffer[128] = ""; // text buffer for search input
 
 	if (ImGui::BeginSearchableCombo(
-	        "Ball skins", selectedTexture_cvar.getStringValue().c_str(), searchBuffer, sizeof(searchBuffer), "search..."))
-	{
+	        "Ball skins", selectedTexture_cvar.getStringValue().c_str(), searchBuffer, sizeof(searchBuffer), "search...")) {
 		std::string searchQuery = Format::ToLower(searchBuffer); // convert search text to lower
 
-		for (const auto& [name, skin] : m_savedTextureData)
-		{
-			GUI::ScopedID id{&skin};
+		for (const auto &[name, skin] : m_savedTextureData) {
+			GUI::ScopedID id{ &skin };
 
-			const std::string& skinName      = skin.name;
+			const std::string &skinName      = skin.name;
 			const std::string  skinNameLower = Format::ToLower(skinName);
 
 			if (!searchQuery.empty()) // only render option if there's text in search
@@ -734,18 +709,15 @@ void TexturesComponent::display_skinDropdown()
 				if (skinNameLower.find(searchQuery) == std::string::npos)
 					continue;
 
-				if (ImGui::Selectable(skinName.c_str(), name == *m_selectedTextureStr))
-				{
+				if (ImGui::Selectable(skinName.c_str(), name == *m_selectedTextureStr)) {
 					selectedTexture_cvar.setValue(name);
 
 					GAME_THREAD_EXECUTE({ applySelectedSkinToAllBalls(); });
 				}
-			}
-			else // if there's no text in search box, render all possible key
-			     // options
+			} else // if there's no text in search box, render all possible key
+			       // options
 			{
-				if (ImGui::Selectable(skinName.c_str(), name == *m_selectedTextureStr))
-				{
+				if (ImGui::Selectable(skinName.c_str(), name == *m_selectedTextureStr)) {
 					selectedTexture_cvar.setValue(name);
 
 					GAME_THREAD_EXECUTE({ applySelectedSkinToAllBalls(); });
@@ -767,8 +739,7 @@ void TexturesComponent::display_skinDropdown()
 	ImGui::Text("%zu skins", m_savedTextureData.size());
 }
 
-void TexturesComponent::display_skinJsonCreator()
-{
+void TexturesComponent::display_skinJsonCreator() {
 	static SkinJsonDataForImgui       skinData{};
 	static bool                       useNormalOrMask = false;
 	static constexpr std::string_view IMG_TIP =
@@ -792,8 +763,7 @@ void TexturesComponent::display_skinJsonCreator()
 	ImGui::InputText("Diffuse", skinData.diffusePath, IM_ARRAYSIZE(skinData.diffusePath));
 	GUI::ToolTip(IMG_TIP);
 
-	if (useNormalOrMask)
-	{
+	if (useNormalOrMask) {
 		ImGui::InputText("Normal", skinData.normalPath, IM_ARRAYSIZE(skinData.normalPath));
 		GUI::ToolTip(IMG_TIP);
 		ImGui::InputText("Mask", skinData.maskPath, IM_ARRAYSIZE(skinData.maskPath));
@@ -802,8 +772,7 @@ void TexturesComponent::display_skinJsonCreator()
 
 	GUI::Spacing(2);
 
-	if (ImGui::Button("Create JSON file"))
-	{
+	if (ImGui::Button("Create JSON file")) {
 		GAME_THREAD_EXECUTE({ createSkinJsonFile(skinData); });
 	}
 
@@ -817,29 +786,24 @@ void TexturesComponent::display_skinJsonCreator()
 // ###########################################    STRUCT FUNCTIONS    ###########################################
 // ##############################################################################################################
 
-void SkinJsonDataForImgui::clear()
-{
+void SkinJsonDataForImgui::clear() {
 	std::memset(this, 0,
 	    sizeof(*this)); // works bc all data members are just POD char arrays
 }
 
-bool SkinJsonData::validateData(const fs::path& ballTexFolder)
-{
-	if (jsonFileName.empty() || skinName.empty() || (diffusePath.empty() && normalPath.empty() && maskPath.empty()))
-	{
+bool SkinJsonData::validateData(const fs::path &ballTexFolder) {
+	if (jsonFileName.empty() || skinName.empty() || (diffusePath.empty() && normalPath.empty() && maskPath.empty())) {
 		Instances.spawnNotification("Custom Ball Online", "ERROR: Missing required fields", 5, true);
 		return false;
 	}
 
-	if (!jsonFileName.ends_with(".json"))
-	{
+	if (!jsonFileName.ends_with(".json")) {
 		jsonFileName += ".json";
 		LOG("Added \".json\" to file name...");
 	}
 
-	const std::string* paths[] = {&diffusePath, &normalPath, &maskPath};
-	for (const std::string* path : paths)
-	{
+	const std::string *paths[] = { &diffusePath, &normalPath, &maskPath };
+	for (const std::string *path : paths) {
 		if (path->empty())
 			continue;
 
@@ -847,8 +811,7 @@ bool SkinJsonData::validateData(const fs::path& ballTexFolder)
 		fs::path fullImgPath = ballTexFolder / *path;
 		fullImgPath          = fs::weakly_canonical(fullImgPath);
 
-		if (!fs::exists(fullImgPath))
-		{
+		if (!fs::exists(fullImgPath)) {
 			std::string msg = std::format("ERROR: Image doesn't exist: \"{}\"", fullImgPath.string());
 			Instances.spawnNotification("Custom Ball Online", msg, 5, true);
 			return false;
@@ -858,8 +821,7 @@ bool SkinJsonData::validateData(const fs::path& ballTexFolder)
 	return true;
 }
 
-json SkinJsonData::toJson() const
-{
+json SkinJsonData::toJson() const {
 	json j;
 
 	j[skinName]["Group"] = ""; // "Group" key/val aint used in this mod, but we
@@ -875,14 +837,12 @@ json SkinJsonData::toJson() const
 	return j;
 }
 
-bool BallSkinData::loadTextures()
-{
-	for (auto& [paramName, texData] : paramTextures)
-	{
+bool BallSkinData::loadTextures() {
+	for (auto &[paramName, texData] : paramTextures) {
 		if (validUObject(texData.texture))
 			continue;
 
-		auto* createdTex = TexturesComponent::imgPathToTexture(texData.imgPath);
+		auto *createdTex = TexturesComponent::imgPathToTexture(texData.imgPath);
 		if (!createdTex)
 			return false;
 
@@ -893,10 +853,8 @@ bool BallSkinData::loadTextures()
 	return true;
 }
 
-void BallSkinData::clearLoadedTextures()
-{
-	for (auto& [paramName, tex] : paramTextures)
-	{
+void BallSkinData::clearLoadedTextures() {
+	for (auto &[paramName, tex] : paramTextures) {
 		if (!tex.texture)
 			continue;
 
@@ -907,21 +865,18 @@ void BallSkinData::clearLoadedTextures()
 	bTexturesLoaded = false;
 }
 
-bool BallSkinData::fromJson(const std::string& skinName, const json& j, const fs::path& jsonFilePath)
-{
-	if (j.empty() || !j.is_object() || !j.contains("Params"))
-	{
+bool BallSkinData::fromJson(const std::string &skinName, const json &j, const fs::path &jsonFilePath) {
+	if (j.empty() || !j.is_object() || !j.contains("Params")) {
 		LOG("ERROR: Invalid json data. Unable to populate BallSkinData instance");
 		return false;
 	}
 
-	if (!fs::exists(jsonFilePath))
-	{
+	if (!fs::exists(jsonFilePath)) {
 		LOG("ERROR: Invalid filepath: {}", jsonFilePath.string());
 		return false;
 	}
 
-	for (const auto& [paramName, relativeImgPath] : j["Params"].items()) // param name --> relative path to image file
+	for (const auto &[paramName, relativeImgPath] : j["Params"].items()) // param name --> relative path to image file
 	{
 		if (relativeImgPath.empty())
 			continue;
@@ -931,11 +886,10 @@ bool BallSkinData::fromJson(const std::string& skinName, const json& j, const fs
 		fullImgPath          = fs::weakly_canonical(fullImgPath);
 
 		// add to map
-		paramTextures.emplace(paramName, TexData{fullImgPath, nullptr});
+		paramTextures.emplace(paramName, TexData{ fullImgPath, nullptr });
 	}
 
-	if (paramTextures.empty())
-	{
+	if (paramTextures.empty()) {
 		LOG("ERROR: No valid param textures found in JSON data.... It might be "
 		    "improperly configured");
 		return false;

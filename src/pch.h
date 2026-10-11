@@ -28,7 +28,7 @@
 #define USE_GMALLOC
 #include <RLSDK/RLSDK/SdkHeaders.hpp>
 
-#include "logging.h"
+#include "util/logging.hpp"
 
 namespace fs = std::filesystem;
 using json   = nlohmann::json;

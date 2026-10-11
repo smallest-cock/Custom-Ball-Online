@@ -1,16 +1,15 @@
 #include "pch.h"
-#include "CustomBallOnline.hpp"
-#include "components/Textures.hpp"
+#include "custom_ball_online.hpp"
+#include "components/textures.hpp"
 
-void CustomBallOnline::RenderSettings()
-{
+void CustomBallOnline::RenderSettings() {
 	auto enabled_cvar = getCvar(Cvars::enabled);
 	if (!enabled_cvar)
 		return;
 
 	const float contentHeight = ImGui::GetContentRegionAvail().y - FOOTER_HEIGHT; // available height after accounting for footer
 	{
-		GUI::ScopedChild c{"PluginSettingsSection", ImVec2(0, contentHeight)};
+		GUI::ScopedChild c{ "PluginSettingsSection", ImVec2(0, contentHeight) };
 
 		GUI::alt_settings_header(h_label.c_str(), plugin_version_display, gameWrapper);
 

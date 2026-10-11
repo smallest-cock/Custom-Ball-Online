@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.17
+- Fixed custom ball skins in casual intermission lobbies
+- Updated internal SDK to match latest RL version (v2.77)
+
 ## v2.2.16
 - Updated internal SDK to match latest RL version (v2.76)
 

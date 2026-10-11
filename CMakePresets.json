@@ -33,7 +33,7 @@
             }
         },
         {
-          "name": "linux-clang-cl",
+          "name": "clang-cl-linux",
           "generator": "Ninja",
           "binaryDir": "${sourceDir}/build/ninja/clang-cl-release",
           "toolchainFile": "${sourceDir}/cmake/toolchains/clang-cl-cross.cmake",
@@ -49,7 +49,7 @@
         },
         {
             "name": "Ninja-Release-Clang",
-            "configurePreset": "linux-clang-cl"
+            "configurePreset": "clang-cl-linux"
         }
     ]
 }

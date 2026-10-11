@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.0)
 
-project(CustomBallOnline VERSION 2.2.15)
+project(CustomBallOnline VERSION 2.2.17)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -37,6 +37,8 @@ endif()
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(COMPONENTS_DIR "${SRC_DIR}/components")
+set(UTIL_DIR "${SRC_DIR}/util")
+set(BOILERPLATE_DIR "${SRC_DIR}/boilerplate")
 set(EXTERNAL_DIR "${CMAKE_SOURCE_DIR}/external")
 
 set(BMSDK_DIR "${EXTERNAL_DIR}/BMSDK")
@@ -91,21 +93,36 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 4)
   )
 endif()
 
+set(BOILERPLATE_DIR "${SRC_DIR}/boilerplate")
+set(BOILERPLATE_SRC
+    ${BOILERPLATE_DIR}/gui_base.cpp
+    ${BOILERPLATE_DIR}/plugin_helper_base.cpp
+    ${BOILERPLATE_DIR}/custom_ball_online.rc
+)
+
+set(UTIL_DIR "${SRC_DIR}/util")
+set(UTIL_SRC
+    ${UTIL_DIR}/instances.cpp
+    ${UTIL_DIR}/hook_manager.cpp
+)
+
+set(COMPONENTS_DIR "${SRC_DIR}/components")
+set(COMPONENTS_SRC
+    ${COMPONENTS_DIR}/textures.cpp
+)
+
 add_library(${PROJECT_NAME}
     SHARED
     ${IMGUI_SRC}
     ${RLSDK_SRC}
     ${MODUTILS_SRC}
-    ${COMPONENTS_DIR}/Instances.cpp
-    ${COMPONENTS_DIR}/Textures.cpp
-    ${SRC_DIR}/${PROJECT_NAME}.cpp
-    ${SRC_DIR}/HelperFuncs.cpp
-    ${SRC_DIR}/SettingsGUI.cpp
-    ${SRC_DIR}/Events.cpp
-    ${SRC_DIR}/Commands.cpp
-    ${SRC_DIR}/GuiBase.cpp
+    ${BOILERPLATE_SRC}
+    ${UTIL_SRC}
+    ${COMPONENTS_SRC}
+    ${SRC_DIR}/custom_ball_online.cpp
+    ${SRC_DIR}/settings_gui.cpp
+    ${SRC_DIR}/commands.cpp
     ${SRC_DIR}/pch.cpp
-    ${SRC_DIR}/${PROJECT_NAME}.rc
 )
 
 target_precompile_headers(${PROJECT_NAME}
