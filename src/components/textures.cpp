@@ -77,20 +77,11 @@ void TexturesComponent::initHooks() {
 		runCommand(Commands::applyTexture);
 	});
 
-	// ############################################################################################################
-	// testing
-	// ############################################################################################################
-
 	auto applySkinOnLobbyGameEvent = [this](ActorWrapper Caller, void *Params, std::string eventName) -> void {
 		LOG("[HOOK]: {}", eventName);
 
 		if (!*m_pluginEnabled)
 			return;
-
-		if (!Caller.memory_address) {
-			LOGERROR("Caller is null in post hook for {}", eventName);
-			return;
-		}
 
 		auto *ge = UnrealCast<AGameEvent_Lobby_TA>(reinterpret_cast<UObject *>(Caller.memory_address));
 		if (!ge) {
@@ -103,32 +94,29 @@ void TexturesComponent::initHooks() {
 		if (!skin)
 			return;
 
-		applySkinToBallDissolveMIC(*skin);
-		applySkinToBall(ge->Ball, *skin);
-		applySkinToBallArchetype(ge->BallArchetype, *skin);
-	};
-
-	// ############################################################################################################
-
-	auto applySkinToAllBalls = [this](std::string eventName) -> void {
-		LOG("[HOOK]: {}", eventName);
-
-		if (!*m_pluginEnabled)
+		if (!validUObject(ge->WorldInfo)) {
+			LOGERROR("ge->WorldInfo is null");
 			return;
-
-		auto *skin = getSelectedSkin();
-		if (!skin)
-			return;
-
-		auto balls = Instances.getAllInstancesOf<ABall_TA>();
-		LOG("Num ABall_TA ptrs found in GObjects: {}", balls.size());
-		for (auto *ball : balls) {
-			applySkinToBall(ball, *skin);
 		}
+
+		// // debug
+		// int pawnCount{};
+		// int ballCount{};
+
+		for (APawn *p = ge->WorldInfo->PawnList; validUObject(p); p = p->NextPawn) {
+			// pawnCount++;
+			if (!p->IsA<ABall_TA>())
+				continue;
+			applySkinToBall(static_cast<ABall_TA *>(p), *skin);
+			// ballCount++;
+		}
+
+		// // debug
+		// LOG("There were {} pawns in ge->WorldInfo->PawnList. {} of which were balls.", pawnCount, ballCount);
 	};
 
 	// NOTE: this is the hook that applies skin in casual intermission
-	hookEventPost(Events::PlayWithBall_BeginState, applySkinToAllBalls);
+	hookWithCallerPost(Events::PlayWithBall_BeginState, applySkinOnLobbyGameEvent);
 
 	// super hook... even gets fired when skipping to different times in a replay
 	hookWithCallerPost(Events::FXActor_Ball_TA_StartBallFadeIn, [this](ActorWrapper Caller, void *Params, std::string event) {
@@ -296,16 +284,6 @@ void TexturesComponent::applySkinToBall(ABall_TA *ball, const BallSkinData &skin
 		         "or mesh->GetMaterial(0)) is invalid");
 		return;
 	}
-
-	// apply texture(s)
-
-	/*
-	        // debug log... can eventually remove
-	        LOG("Finna apply texture to ball mesh: (ball {}) (mesh {}) (MIC {})
-	   {}", Format::ToHexString(mic), Format::ToHexString(mesh),
-	        Format::ToHexString(ball),
-	        mesh->GetFullName());
-	*/
 
 	for (const auto &[paramName, tex] : skin.paramTextures) {
 		if (!validUObject(tex.texture))
